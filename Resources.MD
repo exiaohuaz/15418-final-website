@@ -15,3 +15,7 @@ This may work installing for png++:
 `brew install png++`
 
 If everything is done correctly, you should be able to compile the `testRay.cpp` file in the repo via `g++ -lpng16 testRay.cpp`
+
+
+
+Compile `convolution.cpp` file via `g++ -lpng16 convolution.cpp` and then run `./a.out <png_file>`. The output will be stored in out/output.png.

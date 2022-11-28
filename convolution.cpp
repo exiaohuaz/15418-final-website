@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
                 P diff = indices[loc];
                 sum += img[i+diff.first][j+diff.second] * mask[1+diff.first][1+diff.second];
             }
-            output[i][j] = sum<=120?0:255;
+            output[i][j] = sum<=120?255:0;
         }
     }
 

@@ -23,6 +23,7 @@ struct ray
   Vec2<float> position;
   Vec2<float> velocity;
   float intensity;
+  png::rgb_pixel color;
 };
 
 struct lightcollector
@@ -85,10 +86,27 @@ int main(int argc, char** argv) {
   const float defaultDistPixel = 1.0f;
   //Vec2f lightSourcePos(141.3f, 52.84f);
   Vec2f lightSourcePos(200.3f, 52.84f);
-  lightray lightSource;
+  lightray lightSource, lightSource1, lightSource2;
   lightSource.position = lightSourcePos;
   lightSource.velocity = lightSourcePos;
   lightSource.intensity = 255 + 255 + 255;
+
+  lightSource1.position = Vec2f(100.66f, 210.55f);
+  lightSource1.velocity = lightSource1.position;
+  lightSource1.intensity = 50;
+
+  lightSource2.position = Vec2f(200.66f, 210.55f);
+  lightSource2.velocity = lightSource2.position;
+  lightSource2.intensity = 300;
+
+  std::vector<lightray> lightSources;
+
+  // default code will have three light sources
+  lightSources.push_back(lightSource);
+  lightSources.push_back(lightSource1);
+  
+
+  
   png::rgb_pixel oneLight = png::rgb_pixel(255, 0, 0);
     
   png::image<png::rgb_pixel> colorImg(argv[1]);

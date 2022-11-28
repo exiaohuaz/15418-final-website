@@ -7,6 +7,7 @@
 #include "vec2.h"
 #include <omp.h>
 #include <math.h>
+#include "timing.h"
 
 #define RAYCOUNT 10000 // rays per source
 #define HIT_THRESHOLD 1000
@@ -39,7 +40,7 @@ bool almostEqual(float a, float b) {
 }
 
 // updates the position and intensity of a ray while contributing its partial score to the new image
-void updateRayAtSource(lightray *source, lightray *mRay, float *ss, int cols, int numSources, int sourceNum) {
+void updateRay(lightray *source, lightray *mRay, float *ss, int cols, int numSources, int sourceNum) {
   if (!(almostEqual(mRay->position.x, source->position.x) && almostEqual(mRay->position.y, source->position.y))) {
     int accessRow = (int)mRay->position.y;
     int accessCol = (int)mRay->position.x;
@@ -73,7 +74,6 @@ void fillPartialScores(float *singleScores, int sourceNum, lightray lightSource,
   const Vec2f unitVecX(1.0f, 0.0f);
 
   // spawn rays from source
-  //#pragma omp parallel for
   for (int i = 0; i < RAYCOUNT; i++) {
     Vec2f curDir(unitVecX);
     double rotAmt = (double)i * (360.0 / RAYCOUNT);
@@ -86,7 +86,7 @@ void fillPartialScores(float *singleScores, int sourceNum, lightray lightSource,
     while (rayInBox(tl, br, mRay)) {
       if (tracedImg[(int)mRay.position.y][(int)mRay.position.x] == 0) break;
       else {
-        updateRayAtSource(&lightSource, &mRay, singleScores, cols, numSources, sourceNum); // update the ray based on a given source
+        updateRay(&lightSource, &mRay, singleScores, cols, numSources, sourceNum); // update the ray based on a given source
       }
     }
   }
@@ -180,6 +180,8 @@ int main(int argc, char** argv) {
 
   int numSources = lightSources.size();
   float singleScores[rows][cols][numSources] = { 0 };
+
+  Timer rayTracerTimer;
   
   for (int s = 0; s < numSources; s++) { // cycle through the sources
     lightray lightSource = lightSources[s];
@@ -188,6 +190,9 @@ int main(int argc, char** argv) {
 
   // accumulate the contributions from each partial score onto the main image
   colorOutput(colorImg, (float*)singleScores, lightSources, rows, cols, numSources);
+
+  double rayTracerTime = rayTracerTimer.elapsed();
+  printf("total simulation time: %.6fs\n", rayTracerTime);
 
   colorImg.write("output.png"); // finished product
   return 0;

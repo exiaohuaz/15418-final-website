@@ -16,6 +16,19 @@ This may work installing for png++:
 
 If everything is done correctly, you should be able to compile the `testRay.cpp` file in the repo via `g++ -lpng16 testRay.cpp`
 
+<<<<<<< HEAD
 
 
 Compile `convolution.cpp` file via `g++ -lpng16 convolution.cpp` and then run `./a.out <png_file>`. The output will be stored in out/output.png.
+=======
+---------------------------------------------------------------------------------------------------------------
+Updates 11/27:
+M1 Macs have a hard time using OpenMP due to the ARM processor
+So instead of using the regular `brew` all installations should use the `arch -x86_64 /usr/local/bin/brew` version
+
+The compiler being used should no longer be the default `g++` version. Rather, first install via 
+`arch -x86_64 /usr/local/bin/brew install gcc@12`. The compiler we will be using when this is done can be called via `x86_64-apple-darwin21-g++-12` as seen in the makefile. Then do another brew install for openMP via
+`arch -x86_64 /usr/local/bin/brew install libomp`. Stuff should work then, but if openMP does not work you may need to install `llvm` via this similar process.
+
+Important: Make sure when using the new compiler that you are linking the correct installs of `png++` and `libpng`, for the x86_64 brew installation. Linking these can be rather tricky but specifying a `-I/{path to library}` flag during compilation can account for this.
+>>>>>>> 4133906294d2b87d8306662ed6b61bdad4f7c40e

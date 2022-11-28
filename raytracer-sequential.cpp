@@ -26,15 +26,7 @@ struct ray
   png::rgb_pixel color;
 };
 
-struct lightcollector
-{
-  float redshift;
-  float greenshift;
-  float blueshift;
-};
-
 typedef struct ray lightray;
-typedef struct lightcollector shifter;
 
 bool rayInBox(Vec2<float> tl, Vec2<float> br, lightray mRay) {
   Vec2<float> brHead = br - (mRay.position);
@@ -47,19 +39,16 @@ bool almostEqual(float a, float b) {
 }
 
 // updates the position and intensity of a ray while contributing its partial score to the new image
-void updateRay(lightray *source, lightray *mRay, shifter *shifts, int cols) {
+void updateRayAtSource(lightray *source, lightray *mRay, float *ss, int cols, int numSources, int sourceNum) {
   if (!(almostEqual(mRay->position.x, source->position.x) && almostEqual(mRay->position.y, source->position.y))) {
     int accessRow = (int)mRay->position.y;
     int accessCol = (int)mRay->position.x;
 
-    shifter *accessPoint = shifts + (accessRow * cols) + accessCol;
+    float *accessPoint = ss + (accessRow * cols * numSources) + (accessCol * numSources) + sourceNum;
     
-    accessPoint->blueshift += mRay->intensity;
-    accessPoint->redshift += mRay->intensity;
-    accessPoint->greenshift += mRay->intensity;
+    *accessPoint += mRay->intensity;
   }
   // update position and intensity
-  //mRay->intensity *= degradeFac;
   Vec2f delta = mRay->velocity * incrRay;
   mRay->position.x += delta.x;
   mRay->position.y += delta.y;
@@ -76,6 +65,74 @@ float computeContributionFactor(float score) {
   else return 1.f;
 }
 
+// casts rays from a single source identified by sourceNum to update singleScores
+void fillPartialScores(float *singleScores, int sourceNum, lightray lightSource, int rows, int cols, int numSources,
+                    png::image<png::gray_pixel> tracedImg) {
+  const Vec2f tl(0.0f, 0.0f);
+  const Vec2f br((float)cols, (float)rows);
+  const Vec2f unitVecX(1.0f, 0.0f);
+
+  // spawn rays from source
+  //#pragma omp parallel for
+  for (int i = 0; i < RAYCOUNT; i++) {
+    Vec2f curDir(unitVecX);
+    double rotAmt = (double)i * (360.0 / RAYCOUNT);
+    curDir.rotate(rotAmt);
+    lightray mRay;
+    mRay.position = lightSource.position;
+    mRay.velocity = curDir;
+    mRay.intensity = lightSource.intensity;
+
+    while (rayInBox(tl, br, mRay)) {
+      if (tracedImg[(int)mRay.position.y][(int)mRay.position.x] == 0) break;
+      else {
+        updateRayAtSource(&lightSource, &mRay, singleScores, cols, numSources, sourceNum); // update the ray based on a given source
+      }
+    }
+  }
+}
+
+float sumFloats(float *fs, int n) {
+  float ans = 0.f;
+  for (int i = 0; i < n; i++) {
+    ans += *(fs + i);
+  }
+  return ans;
+}
+
+void colorOutput(png::image<png::rgb_pixel> &colorImg, float* ss, std::vector<lightray> lightSources, int rows, int cols, int numSources) {
+    // apply source light to image
+
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      float *accessPoint = ss + (r * cols * numSources) + (c * numSources);
+      float pixelScore = sumFloats(accessPoint, numSources);
+
+      float effRed = 0;
+      float effGreen = 0;
+      float effBlue = 0;
+      for (int s = 0; s < numSources; s++) {
+        effRed += lightSources[s].color.red * (*(accessPoint + s)) / pixelScore;
+        effBlue += lightSources[s].color.blue * (*(accessPoint + s)) / pixelScore;
+        effGreen += lightSources[s].color.green * (*(accessPoint + s)) / pixelScore;
+      }
+
+      png::rgb_pixel oneLight = png::rgb_pixel((int)effRed, (int)effGreen, (int)effBlue);
+
+      int contributionRed = (oneLight.red - colorImg[r][c].red) * computeContributionFactor(pixelScore); 
+      int contributionGreen = (oneLight.green - colorImg[r][c].green) * computeContributionFactor(pixelScore);
+      int contributionBlue = (oneLight.blue - colorImg[r][c].blue) * computeContributionFactor(pixelScore);
+
+      int newRed = std::min(255, colorImg[r][c].red + contributionRed);
+      int newBlue = std::min(255, colorImg[r][c].blue + contributionBlue);
+      int newGreen = std::min(255, colorImg[r][c].green + contributionGreen);
+      
+      //apply
+      colorImg[r][c] = png::rgb_pixel(newRed, newGreen, newBlue);
+    }
+  }
+}
+
 // takes in <color.png> <traced.png> and produces an <output.png>
 int main(int argc, char** argv) {
   if (argc != 3) {
@@ -84,28 +141,30 @@ int main(int argc, char** argv) {
   } 
 
   const float defaultDistPixel = 1.0f;
-  //Vec2f lightSourcePos(141.3f, 52.84f);
+
   Vec2f lightSourcePos(200.3f, 52.84f);
-  lightray lightSource, lightSource1, lightSource2;
-  lightSource.position = lightSourcePos;
-  lightSource.velocity = lightSourcePos;
-  lightSource.intensity = 255 + 255 + 255;
+  lightray lightSource0, lightSource1, lightSource2;
+  lightSource0.position = lightSourcePos;
+  lightSource0.velocity = lightSourcePos;
+  lightSource0.intensity = 255 + 255 + 255;
+  lightSource0.color = png::rgb_pixel(255, 0, 0);
 
   lightSource1.position = Vec2f(100.66f, 210.55f);
   lightSource1.velocity = lightSource1.position;
-  lightSource1.intensity = 50;
+  lightSource1.intensity = 1000;
+  lightSource1.color = png::rgb_pixel(10, 200, 200);
 
-  lightSource2.position = Vec2f(200.66f, 210.55f);
+  lightSource2.position = Vec2f(20.66f, 130.85903f);
   lightSource2.velocity = lightSource2.position;
   lightSource2.intensity = 300;
+  lightSource2.color = png::rgb_pixel(0, 0, 255);
 
   std::vector<lightray> lightSources;
 
   // default code will have three light sources
-  lightSources.push_back(lightSource);
+  lightSources.push_back(lightSource0);
   lightSources.push_back(lightSource1);
-  
-
+  lightSources.push_back(lightSource2);
   
   png::rgb_pixel oneLight = png::rgb_pixel(255, 0, 0);
     
@@ -119,57 +178,17 @@ int main(int argc, char** argv) {
     return 2;
   }
 
-
-  shifter shifts[rows][cols]; // initialize shift scores per pixel
-  for (int r = 0; r < rows; r++) {
-    for (int c = 0; c < cols; c++) {
-      shifts[r][c].blueshift = 0.0f;
-      shifts[r][c].redshift = 0.0f;
-      shifts[r][c].greenshift = 0.0f;
-    }
-  }
-  // this will collect the "update score" for each pixel from all of the rays that pass through
-
-  const Vec2f tl(0.0f, 0.0f);
-  const Vec2f br((float)cols, (float)rows);
-  const Vec2f unitVecX(1.0f, 0.0f);
-
-  // spawn rays from source
-  //#pragma omp parallel for
-  for (int i = 0; i < RAYCOUNT; i++) {
-    Vec2f curDir(unitVecX);
-    double rotAmt = (double)i * (360.0 / RAYCOUNT);
-    curDir.rotate(rotAmt);
-    lightray mRay;
-    mRay.position = lightSourcePos;
-    mRay.velocity = curDir;
-    mRay.intensity = oneLight.red + oneLight.blue + oneLight.green;
-
-    while (rayInBox(tl, br, mRay)) {
-      if (tracedImg[(int)mRay.position.y][(int)mRay.position.x] == 0) break;
-      else {
-        updateRay(&lightSource, &mRay, (shifter*)shifts, cols); // update the ray
-      }
-    }
+  int numSources = lightSources.size();
+  float singleScores[rows][cols][numSources] = { 0 };
+  
+  for (int s = 0; s < numSources; s++) { // cycle through the sources
+    lightray lightSource = lightSources[s];
+    fillPartialScores((float*)singleScores, s, lightSource, rows, cols, numSources, tracedImg);
   }
 
-  // apply source light to image
-  for (int r = 0; r < rows; r++) {
-    for (int c = 0; c < cols; c++) {
-      int contributionRed = (oneLight.red - colorImg[r][c].red) * computeContributionFactor(shifts[r][c].redshift); //std::min(1.0f, shifts[r][c].redshift / HIT_THRESHOLD);
-      int contributionGreen = (oneLight.green - colorImg[r][c].green) * computeContributionFactor(shifts[r][c].greenshift); //std::min(1.0f, shifts[r][c].greenshift / HIT_THRESHOLD);
-      int contributionBlue = (oneLight.blue - colorImg[r][c].blue) * computeContributionFactor(shifts[r][c].blueshift); //std::min(1.0f, shifts[r][c].blueshift / HIT_THRESHOLD);
+  // accumulate the contributions from each partial score onto the main image
+  colorOutput(colorImg, (float*)singleScores, lightSources, rows, cols, numSources);
 
-      int newRed = std::min(255, colorImg[r][c].red + contributionRed);
-      int newBlue = std::min(255, colorImg[r][c].blue + contributionBlue);
-      int newGreen = std::min(255, colorImg[r][c].green + contributionGreen);
-      
-      //apply
-      colorImg[r][c] = png::rgb_pixel(newRed, newGreen, newBlue);
-    }
-  }
-
-  //printf("score at up: %f\n", shifts[0][141].redshift);
   colorImg.write("output.png"); // finished product
   return 0;
 }

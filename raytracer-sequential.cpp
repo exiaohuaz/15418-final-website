@@ -9,7 +9,7 @@
 #include <math.h>
 #include "timing.h"
 
-#define RAYCOUNT 10000 // rays per source
+#define RAYCOUNT 5000 // rays per source
 #define HIT_THRESHOLD 1000
 
 #define L1_THRESHOLD 1
@@ -142,12 +142,13 @@ int main(int argc, char** argv) {
 
   const float defaultDistPixel = 1.0f;
 
-  Vec2f lightSourcePos(200.3f, 52.84f);
-  lightray lightSource0, lightSource1, lightSource2;
+  //Vec2f lightSourcePos(200.3f, 52.84f);
+  Vec2f lightSourcePos(720.3f, 82.84f);
+  lightray lightSource0, lightSource1, lightSource2, lightSource3;
   lightSource0.position = lightSourcePos;
   lightSource0.velocity = lightSourcePos;
-  lightSource0.intensity = 255 + 255 + 255;
-  lightSource0.color = png::rgb_pixel(255, 0, 0);
+  lightSource0.intensity = 255 + 255 + 255 + 9000 + 20000;
+  lightSource0.color = png::rgb_pixel(255, 255, 0);
 
   lightSource1.position = Vec2f(100.66f, 210.55f);
   lightSource1.velocity = lightSource1.position;
@@ -159,12 +160,18 @@ int main(int argc, char** argv) {
   lightSource2.intensity = 300;
   lightSource2.color = png::rgb_pixel(0, 0, 255);
 
+  lightSource3.position = Vec2f(250.66f, 223.85903f);
+  lightSource3.velocity = lightSource3.position;
+  lightSource3.intensity = 1000;
+  lightSource3.color = png::rgb_pixel(200, 200, 0);
+
   std::vector<lightray> lightSources;
 
   // default code will have three light sources
   lightSources.push_back(lightSource0);
   lightSources.push_back(lightSource1);
-  lightSources.push_back(lightSource2);
+  //lightSources.push_back(lightSource2);
+  //lightSources.push_back(lightSource3);
   
   png::rgb_pixel oneLight = png::rgb_pixel(255, 0, 0);
     
@@ -192,7 +199,7 @@ int main(int argc, char** argv) {
   colorOutput(colorImg, (float*)singleScores, lightSources, rows, cols, numSources);
 
   double rayTracerTime = rayTracerTimer.elapsed();
-  printf("total simulation time: %.6fs\n", rayTracerTime);
+  printf("total raytracer time: %.6fs\n", rayTracerTime);
 
   colorImg.write("output.png"); // finished product
   return 0;

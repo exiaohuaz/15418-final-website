@@ -1,13 +1,16 @@
 #include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
+#include <sstream>
 #include <zlib.h>
 #include <string>
 #include <png++/png.hpp>
 #include "vec2.h"
 #include <omp.h>
 #include <math.h>
-#include "timing.h"
+#include "convolution/timing.h"
+#include "common.h"
 
 #define RAYCOUNT 5000 // rays per source
 #define HIT_THRESHOLD 1000
@@ -18,16 +21,6 @@
 const float incrRay = 0.1f;
 const float degradeFac = 0.98f;
 const float addFac = 100.f;
-
-struct ray 
-{
-  Vec2<float> position;
-  Vec2<float> velocity;
-  float intensity;
-  png::rgb_pixel color;
-};
-
-typedef struct ray lightray;
 
 bool rayInBox(Vec2<float> tl, Vec2<float> br, lightray mRay) {
   Vec2<float> brHead = br - (mRay.position);
@@ -135,43 +128,15 @@ void colorOutput(png::image<png::rgb_pixel> &colorImg, float* ss, std::vector<li
 
 // takes in <color.png> <traced.png> and produces an <output.png>
 int main(int argc, char** argv) {
-  if (argc != 3) {
-    printf("Usage: raytrace <(color)*.png> <(traced)*.png> ");
+  if (argc != 4) {
+    printf("Usage: raytrace <(color)*.png> <(traced)*.png> <(lights)*.txt>");
     return 1;
   } 
 
   const float defaultDistPixel = 1.0f;
 
-  //Vec2f lightSourcePos(200.3f, 52.84f);
-  Vec2f lightSourcePos(720.3f, 82.84f);
-  lightray lightSource0, lightSource1, lightSource2, lightSource3;
-  lightSource0.position = lightSourcePos;
-  lightSource0.velocity = lightSourcePos;
-  lightSource0.intensity = 255 + 255 + 255 + 9000 + 20000;
-  lightSource0.color = png::rgb_pixel(255, 255, 0);
-
-  lightSource1.position = Vec2f(100.66f, 210.55f);
-  lightSource1.velocity = lightSource1.position;
-  lightSource1.intensity = 1000;
-  lightSource1.color = png::rgb_pixel(10, 200, 200);
-
-  lightSource2.position = Vec2f(20.66f, 130.85903f);
-  lightSource2.velocity = lightSource2.position;
-  lightSource2.intensity = 300;
-  lightSource2.color = png::rgb_pixel(0, 0, 255);
-
-  lightSource3.position = Vec2f(250.66f, 223.85903f);
-  lightSource3.velocity = lightSource3.position;
-  lightSource3.intensity = 1000;
-  lightSource3.color = png::rgb_pixel(200, 200, 0);
-
   std::vector<lightray> lightSources;
-
-  // default code will have three light sources
-  lightSources.push_back(lightSource0);
-  lightSources.push_back(lightSource1);
-  //lightSources.push_back(lightSource2);
-  //lightSources.push_back(lightSource3);
+  loadFromFile("lights.txt", lightSources);
   
   png::rgb_pixel oneLight = png::rgb_pixel(255, 0, 0);
     

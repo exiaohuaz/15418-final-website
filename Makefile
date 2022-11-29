@@ -12,7 +12,7 @@ convolution: convolution.cpp
 	x86_64-apple-darwin21-g++-12 $(CPPFLAGS) convolution.cpp -o convolution 
 
 run: raytrace
-	./raytrace bwbw.png bwbwTrace.png  
+	./raytrace bwbw.png bwbwTrace.png lights.txt
 
 
 clean:

@@ -8,9 +8,15 @@ rays: raytracer-sequential.cpp
 compare: imageCompare.cpp
 	x86_64-apple-darwin21-g++-12 $(CPPFLAGS) imageCompare.cpp -o imageCompare
 
+convolution: convolution.cpp
+	x86_64-apple-darwin21-g++-12 $(CPPFLAGS) convolution.cpp -o convolution 
+
 run: raytrace
 	./raytrace bwbw.png bwbwTrace.png  
 
+
 clean:
 	rm -rf ./raytrace
+	rm -rf ./imageCompare
+	rm -rf ./convolution
 

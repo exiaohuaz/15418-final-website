@@ -17,6 +17,9 @@ How to install x86-64 variant of homebrew:
  If everything is done correctly, you should be able to compile the `testRay.cpp` file in the repo via `g++ -lpng16 testRay.cpp`
 
 
+ To get ISPC running: `brew install ispc`
+
+
  Compile `convolution.cpp` file via `g++ -lpng16 convolution.cpp` and then run `./a.out <png_file>`. The output will be stored in out/output.png.
  ---------------------------------------------------------------------------------------------------------------
  Updates 11/27:

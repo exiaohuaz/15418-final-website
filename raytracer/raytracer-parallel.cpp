@@ -12,16 +12,6 @@
 #include "timing.h"
 #include "common.h"
 
-#define RAYCOUNT 5000 // rays per source
-#define HIT_THRESHOLD 1000
-
-#define L1_THRESHOLD 1
-#define L2_THRESHOLD 170000
-
-const float incrRay = 0.1f;
-const float degradeFac = 0.98f;
-const float addFac = 100.f;
-
 bool rayInBox(Vec2<float> tl, Vec2<float> br, lightray mRay) {
   Vec2<float> brHead = br - (mRay.position);
   Vec2<float> tlHead = (mRay.position) - tl;

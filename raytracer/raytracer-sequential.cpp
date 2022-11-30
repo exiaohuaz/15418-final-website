@@ -7,7 +7,7 @@
 #include <string>
 #include <png++/png.hpp>
 #include "vec2.h"
-#include <omp.h>
+#include "/usr/local/opt/libomp/include/omp.h"
 #include <math.h>
 #include "timing.h"
 #include "common.h"

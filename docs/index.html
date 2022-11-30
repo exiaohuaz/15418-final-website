@@ -3,8 +3,14 @@
 <body>
 
 <h1>15418 final project</h1>
-<p>Proposal.</p>
+<p?We are building a 2D ray tracer that takes an image and a light source, processes the image to determine the boundaries the light will hit, and then applies light rays accordingly. </p>
+<p>Here is our proposal.</p>
 <embed src="proposal.pdf" type="application/pdf" width="100%" height="600px" />
-
-</body>
+  
+  <p>Image processing with edge detection convolution kernel</p>
+  <p>We used the ridge detection kernel described in <a href=https://en.wikipedia.org/wiki/Kernel_(image_processing)>this page</a> to process the image. This method essentially does a weighted calculation of the current pixel and surrounding pixels to compute the output pixel. The computations only use the input pixels and do not rely on one another, which means this stage is highly parallelizable. An example of our convolution implementation applied to a common game scenario is below: </p>
+  <p>original</p>
+  <img src="terra.png" alt="Terraria">
+  <p>edge detection</p>
+  <img src="output.png" alt="Terraria edge detected">
 </html>

@@ -20,7 +20,7 @@ How to install x86-64 variant of homebrew:
  To get ISPC running: `brew install ispc`
 
 
- Compile `convolution.cpp` file via `g++ -lpng16 convolution.cpp` and then run `./a.out <png_file>`. The output will be stored in out/output.png.
+ Compile `convolution.cpp` file via `g++ -lpng16 convolution.cpp` and then run `./a.out <png_file>`. The output will be stored in images/outputConv.png.
  ---------------------------------------------------------------------------------------------------------------
  Updates 11/27:
  M1 Macs have a hard time using OpenMP due to the ARM processor

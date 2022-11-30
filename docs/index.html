@@ -28,7 +28,7 @@
   </p>
 
   <p>The parallel algorithm is similar to the sequential algorithm however it is able to extract much parallelism with multiple sources. Since each light source is contributing a partial score, the computations of disparate light sources' rays are modifying different portions of memory. Hence, parallelizing the for loop of light sources is possible with simple OpenMP semantics. 
-    After the main ray computations are done, the partial colors have to get updated on the actual pixels of the source image. Parallelizing on pixels here then is also facilitated via preprocessor semantics of OpenMP.
+    After the main ray computations are done, the partial colors have to get updated on the actual pixels of the source image. Parallelizing on pixels here then is also facilitated via preprocessor semantics of OpenMP. The next step is to find a way to parallelize across rays to maximize the true parallelism that may be possible regardless of the number of light sources.
   </p>
   <p>Raytracing applied after edge detection on terraria scene:</p>
   <img src="image.png" alt="ray tracing">

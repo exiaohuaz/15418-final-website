@@ -19,8 +19,15 @@
   <p>Vectorizing the code with ISPC is difficult due to the 2D nature of the image and also because the types yielded by the image parser are not supported by ISPC or C. I am going to ask about how to resolve this in our meeting tomorrow. We anticipate this will have significant speedup because each computation requires the same number of instructions which means vector utilization will be high. The problem is that if we are unable to overcome the 2D array problem, the overhead of converting the image to a format interactable by ISPC will likely overshadow any performance benefits.</p>
   
   <h2>Raytracing </h2>
-  <p>Rahul did this part. Hopefully he can add some details.
-    We implemented raytracing with one or more light sources.</p>
+  <p>We implemented raytracing with one or more light sources.
+    The algorithm takes in two images, one being the source image to spawn light sources onto, the second being the output of the convolution algorithm to determine ridges on the source image.
+    In addition to image inputs, a text file of light sources is taken in, specifying the position, color, and intensity of each light. Given these inputs, the raytracer would generate a fixed number of rays from each source and propogate these rays at a small granularity (1/10 of a pixel dimension as of now) per time step. A ray itself has a current position vector, current direction vector, color, and intensity. When the position of a ray updates based on its direction, it applies a score to the pixel it is currently within.
+    If the ray is not lying on a ridge, then the score at the incident pixel will be incremented by a value proportional to the inverse of the square of the distance between the ray and its origin. This computation serves to emulate the natural decay of light. Each of these scores must get computed at each pixel for each unique source, this is so that if multiple lights interfere with each other, the partial contribution of color from each light can be applied to the source image, thereby permitting mixing of light color.
+  </p>
+
+  <p>The parallel algorithm is similar to the sequential algorithm however it is able to extract much parallelism with multiple sources. Since each light source is contributing a partial score, the computations of disparate light sources' rays are modifying different portions of memory. Hence, parallelizing the for loop of light sources is possible with simple OpenMP semantics. 
+    After the main ray computations are done, the partial colors have to get updated on the actual pixels of the source image. Parallelizing on pixels here then is also facilitated via preprocessor semantics of OpenMP.
+  </p>
   <p>Raytracing applied after edge detection on terraria scene:</p>
   <img src="image.png" alt="ray tracing">
   <p>Raytracing for multiple light sources applied on low-resolution temporary image</p>

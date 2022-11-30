@@ -7,10 +7,23 @@
 <p>Here is our proposal.</p>
 <embed src="proposal.pdf" type="application/pdf" width="100%" height="600px" />
   
-  <p>Image processing with edge detection convolution kernel</p>
+  <h2>Image processing with edge detection convolution kernel</h2>
   <p>We used the ridge detection kernel described in <a href=https://en.wikipedia.org/wiki/Kernel_(image_processing)>this page</a> to process the image. This method essentially does a weighted calculation of the current pixel and surrounding pixels to compute the output pixel. The computations only use the input pixels and do not rely on one another, which means this stage is highly parallelizable. An example of our convolution implementation applied to a common game scenario is below: </p>
   <p>original</p>
   <img src="terra.png" alt="Terraria">
   <p>edge detection</p>
   <img src="output.png" alt="Terraria edge detected">
+  <p>Some modifications to the edge detection algorithm were made to best suit our purposes. Our ray tracer algorithm depends on pixels being black or white, whereas the ridge detection algorithm yields a lot of gray pixels of varying values. We used a combination of scaling and thresholding to produce a reasonably clean portrayal of the image's edges. In addition, we inverted the colors such that edges are black and clear space is white, which is the opposite of what the default algorithm does.</p>
+  
+  <p>The simplest parallelization was with OpenMP. By adding a pragma omp before iterating through the pixels of the array, we were able to speed the computation up by 5x.</p>
+  <p>Vectorizing the code with ISPC is difficult due to the 2D nature of the image and also because the types yielded by the image parser are not supported by ISPC or C. I am going to ask about how to resolve this in our meeting tomorrow. We anticipate this will have significant speedup because each computation requires the same number of instructions which means vector utilization will be high. The problem is that if we are unable to overcome the 2D array problem, the overhead of converting the image to a format interactable by ISPC will likely overshadow any performance benefits.</p>
+  
+  <h2>Raytracing </h2>
+  <p>Rahul did this part. Hopefully he can add some details.
+    We implemented raytracing with one or more light sources.</p>
+  <p>Raytracing applied after edge detection on terraria scene:</p>
+  <img src="image.png" alt="ray tracing">
+  <p>Raytracing for multiple light sources applied on low-resolution temporary image</p>
+  <img src="image1.png" alt="multiple light sources">
+  
 </html>

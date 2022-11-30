@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     convolution_sequential(rows, cols, img, output);
     double endTime = CycleTimer::currentSeconds();
     printf("total sequential simulation time: %.6fs\n", endTime - startTime);
-    output.write("out/output.png");
+    output.write("../images/outputConv.png");
 
     
     // this stuff is new and doesn't work
@@ -84,4 +84,5 @@ int main(int argc, char** argv) {
     endTime = CycleTimer::currentSeconds();
     verify(rows, cols, output, output_openmp);
     printf("total openmp simulation time: %.6fs\n", endTime - startTime);
+    printf("openmp and sequential outputs match!\n");
 }

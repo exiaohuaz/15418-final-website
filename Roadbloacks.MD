@@ -4,4 +4,4 @@
 
 - Installing ISPC was possible on local machines, but trouble linking libpng to ISPC instructions
 
-
+- ISPC has limitations on function inputs

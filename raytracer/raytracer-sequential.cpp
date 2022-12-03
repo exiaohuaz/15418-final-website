@@ -42,8 +42,6 @@ void updateRay(lightray *source, lightray *mRay, float *ss, int cols, int numSou
 }
 
 float computeContributionFactor(float score) {
-  const float tuningCnst = 0.0087209302; // constants derived by fitting to logarithmic function
-  const float tuningScale = 0.0820614573;
   if (score < L1_THRESHOLD) return 0.f;
   else if (score < L2_THRESHOLD) return tuningCnst + tuningScale * log(score);
   else return 1.f;

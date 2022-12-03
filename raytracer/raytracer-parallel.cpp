@@ -142,7 +142,8 @@ int main(int argc, char** argv) {
   }
 
   int numSources = lightSources.size();
-  float singleScores[rows][cols][numSources] = { 0 };
+  void* singleScores = calloc(rows * cols * numSources, sizeof(float));
+  //float singleScores[rows][cols][numSources] = { 0 };
 
   Timer rayTracerTimer;
   
@@ -159,5 +160,6 @@ int main(int argc, char** argv) {
   printf("total raytracer time: %.6fs\n", rayTracerTime);
 
   colorImg.write(argv[4]); // finished product
+  free(singleScores);
   return 0;
 }

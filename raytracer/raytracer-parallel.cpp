@@ -29,7 +29,7 @@ void updateRay(lightray *source, lightray *mRay, float *ss, int cols, int numSou
     int accessCol = (int)mRay->position.x;
 
     float *accessPoint = ss + (accessRow * cols * numSources) + (accessCol * numSources) + sourceNum;
-    
+    #pragma omp atomic
     *accessPoint += mRay->intensity;
   }
   // update position and intensity
@@ -42,8 +42,6 @@ void updateRay(lightray *source, lightray *mRay, float *ss, int cols, int numSou
 }
 
 float computeContributionFactor(float score) {
-  const float tuningCnst = 0.0087209302; // constants derived by fitting to logarithmic function
-  const float tuningScale = 0.0820614573;
   if (score < L1_THRESHOLD) return 0.f;
   else if (score < L2_THRESHOLD) return tuningCnst + tuningScale * log(score);
   else return 1.f;
@@ -57,6 +55,7 @@ void fillPartialScores(float *singleScores, int sourceNum, lightray lightSource,
   const Vec2f unitVecX(1.0f, 0.0f);
 
   // spawn rays from source
+  #pragma omp parallel for schedule(dynamic, RAYS_PER_THREAD)
   for (int i = 0; i < RAYCOUNT; i++) {
     Vec2f curDir(unitVecX);
     double rotAmt = (double)i * (360.0 / RAYCOUNT);
@@ -147,7 +146,7 @@ int main(int argc, char** argv) {
 
   Timer rayTracerTimer;
   
-  #pragma omp parallel for
+  // #pragma omp parallel for // uncomment to parallelize over sources
   for (int s = 0; s < numSources; s++) { // cycle through the sources
     lightray lightSource = lightSources[s];
     fillPartialScores((float*)singleScores, s, lightSource, rows, cols, numSources, tracedImg);

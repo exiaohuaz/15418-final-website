@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
+#include <vector>
 #include <zlib.h>
 #include <string>
 #include <png++/png.hpp>
@@ -23,14 +24,13 @@ bool almostEqual(float a, float b) {
 }
 
 // updates the position and intensity of a ray while contributing its partial score to the new image
-void updateRay(lightray *source, lightray *mRay, float *ss, int cols, int numSources, int sourceNum) {
+void updateRay(lightray *source, lightray *mRay, std::vector<float> &ss, int cols, int numSources, int sourceNum) {
   if (!(almostEqual(mRay->position.x, source->position.x) && almostEqual(mRay->position.y, source->position.y))) {
     int accessRow = (int)mRay->position.y;
     int accessCol = (int)mRay->position.x;
 
-    float *accessPoint = ss + (accessRow * cols * numSources) + (accessCol * numSources) + sourceNum;
-    
-    *accessPoint += mRay->intensity;
+    int accessIdx = (accessRow * cols * numSources) + (accessCol * numSources) + sourceNum;
+    ss[accessIdx] += mRay->intensity;
   }
   // update position and intensity
   Vec2f delta = mRay->velocity * incrRay;
@@ -50,7 +50,7 @@ float computeContributionFactor(float score) {
 }
 
 // casts rays from a single source identified by sourceNum to update singleScores
-void fillPartialScores(float *singleScores, int sourceNum, lightray lightSource, int rows, int cols, int numSources,
+void fillPartialScores(std::vector<float> &singleScores, int sourceNum, lightray lightSource, int rows, int cols, int numSources,
                     png::image<png::gray_pixel> tracedImg) {
   const Vec2f tl(0.0f, 0.0f);
   const Vec2f br((float)cols, (float)rows);
@@ -75,29 +75,29 @@ void fillPartialScores(float *singleScores, int sourceNum, lightray lightSource,
   }
 }
 
-float sumFloats(float *fs, int n) {
+float sumFloats(std::vector<float> &fs, int accessIdx, int n) {
   float ans = 0.f;
   for (int i = 0; i < n; i++) {
-    ans += *(fs + i);
+    ans += fs[accessIdx + i];
   }
   return ans;
 }
 
-void colorOutput(png::image<png::rgb_pixel> &colorImg, float* ss, std::vector<lightray> lightSources, int rows, int cols, int numSources) {
+void colorOutput(png::image<png::rgb_pixel> &colorImg, std::vector<float> &ss, std::vector<lightray> lightSources, int rows, int cols, int numSources) {
     // apply source light to image
 
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {
-      float *accessPoint = ss + (r * cols * numSources) + (c * numSources);
-      float pixelScore = sumFloats(accessPoint, numSources);
+      int accessIdx = (r * cols * numSources) + (c * numSources);
+      float pixelScore = sumFloats(ss, accessIdx, numSources);
 
       float effRed = 0;
       float effGreen = 0;
       float effBlue = 0;
       for (int s = 0; s < numSources; s++) {
-        effRed += lightSources[s].color.red * (*(accessPoint + s)) / pixelScore;
-        effBlue += lightSources[s].color.blue * (*(accessPoint + s)) / pixelScore;
-        effGreen += lightSources[s].color.green * (*(accessPoint + s)) / pixelScore;
+        effRed += lightSources[s].color.red * (ss[accessIdx + s]) / pixelScore;
+        effBlue += lightSources[s].color.blue * (ss[accessIdx + s]) / pixelScore;
+        effGreen += lightSources[s].color.green * (ss[accessIdx + s]) / pixelScore;
       }
 
       png::rgb_pixel oneLight = png::rgb_pixel((int)effRed, (int)effGreen, (int)effBlue);
@@ -141,23 +141,23 @@ int main(int argc, char** argv) {
   }
 
   int numSources = lightSources.size();
-  void* singleScores = calloc(rows * cols * numSources, sizeof(float));
-  //float singleScores[rows][cols][numSources] = { 0 };
+
+  int dataPieces = rows * cols * numSources;
+  std::vector<float> singleScores(dataPieces, 0);
 
   Timer rayTracerTimer;
   
   for (int s = 0; s < numSources; s++) { // cycle through the sources
     lightray lightSource = lightSources[s];
-    fillPartialScores((float*)singleScores, s, lightSource, rows, cols, numSources, tracedImg);
+    fillPartialScores(singleScores, s, lightSource, rows, cols, numSources, tracedImg);
   }
 
   // accumulate the contributions from each partial score onto the main image
-  colorOutput(colorImg, (float*)singleScores, lightSources, rows, cols, numSources);
+  colorOutput(colorImg, singleScores, lightSources, rows, cols, numSources);
 
   double rayTracerTime = rayTracerTimer.elapsed();
   printf("total raytracer time: %.6fs\n", rayTracerTime);
 
   colorImg.write(argv[4]); // finished product
-  free(singleScores);
   return 0;
 }

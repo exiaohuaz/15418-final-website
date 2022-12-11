@@ -13,6 +13,10 @@
 #include <cmath>
 
 #define NUMTHREADS 1024
+#define COLOR_COMPONENTS 3
+#define REDMOD 0
+#define GREENMOD 1
+#define BLUEMOD 2
 
 __device__ bool rayInBox(float tlx, float tly, float brx, float bry, float posX, float posY, int rayIdx) {
   float brHeadX = brx - posX;
@@ -27,13 +31,13 @@ __device__ bool almostEqual(float a, float b) {
   return (abs(b - a) <= 10e-12);
 }
 
-float computeContributionFactor(float score) {
+__device__ float computeContributionFactor(float score) {
   if (score < L1_THRESHOLD) return 0.f;
   else if (score < L2_THRESHOLD) return tuningCnst + tuningScale * log(score);
   else return 1.f;
 }
 
-float sumFloats(float *fs, int n) {
+__device__ float sumFloats(float *fs, int n) {
   float ans = 0.f;
   for (int i = 0; i < n; i++) {
     ans += *(fs + i);
@@ -41,33 +45,14 @@ float sumFloats(float *fs, int n) {
   return ans;
 }
 
-void colorOutput(png::image<png::rgb_pixel> &colorImg, float* ss, std::vector<lightray> lightSources, int rows, int cols, int numSources) {
+void colorOutput(unsigned char* hostColors, int rows, int cols, png::image<png::rgb_pixel> &colorImg) {
     // apply source light to image
 
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {
-      float *accessPoint = ss + (r * cols * numSources) + (c * numSources);
-      float pixelScore = sumFloats(accessPoint, numSources);
-
-      float effRed = 0;
-      float effGreen = 0;
-      float effBlue = 0;
-      for (int s = 0; s < numSources; s++) {
-        effRed += lightSources[s].color.red * (*(accessPoint + s)) / pixelScore;
-        effBlue += lightSources[s].color.blue * (*(accessPoint + s)) / pixelScore;
-        effGreen += lightSources[s].color.green * (*(accessPoint + s)) / pixelScore;
-      }
-
-      png::rgb_pixel oneLight = png::rgb_pixel((int)effRed, (int)effGreen, (int)effBlue);
-
-      int contributionRed = (oneLight.red - colorImg[r][c].red) * computeContributionFactor(pixelScore); 
-      int contributionGreen = (oneLight.green - colorImg[r][c].green) * computeContributionFactor(pixelScore);
-      int contributionBlue = (oneLight.blue - colorImg[r][c].blue) * computeContributionFactor(pixelScore);
-
-      int newRed = std::min(255, colorImg[r][c].red + contributionRed);
-      int newBlue = std::min(255, colorImg[r][c].blue + contributionBlue);
-      int newGreen = std::min(255, colorImg[r][c].green + contributionGreen);
-      
+      int newRed = *(hostColors + (r * cols * COLOR_COMPONENTS) + (c * COLOR_COMPONENTS) + REDMOD);
+      int newBlue = *(hostColors + (r * cols * COLOR_COMPONENTS) + (c * COLOR_COMPONENTS) + BLUEMOD);
+      int newGreen = *(hostColors + (r * cols * COLOR_COMPONENTS) + (c * COLOR_COMPONENTS) + GREENMOD);
       //apply
       colorImg[r][c] = png::rgb_pixel(newRed, newGreen, newBlue);
     }
@@ -149,6 +134,50 @@ __global__ void fillPartialScores(float *cudaScores, lightray source, int rows, 
   return;
 }
 
+// stores effective rgb values into cudaColors based on partialCudaScores data
+__global__ void produceColors(unsigned char *cudaColors, float **partialCudaScores, unsigned char* loadedCudaColors, int numSources, 
+                              unsigned char* cudaColorRaw, int rows, int cols) {
+  int pixelIndex = blockIdx.x * blockDim.x + threadIdx.x; // spot in linear pixel memory
+  int redIndex = COLOR_COMPONENTS * pixelIndex + REDMOD;
+  int greenIndex = COLOR_COMPONENTS * pixelIndex + GREENMOD;
+  int blueIndex = COLOR_COMPONENTS * pixelIndex + BLUEMOD;
+
+  if (pixelIndex >= rows*cols) {
+    return; // remove extra threads
+  }
+
+  float pixelScore = 0;
+  for (int s = 0; s < numSources; s++) { // derive total score from all partials
+    float *partialScoresArr = *(partialCudaScores + s);
+    pixelScore += *(partialScoresArr + pixelIndex);
+  } 
+
+  float effRed = 0;
+  float effGreen = 0;
+  float effBlue = 0;
+  for (int s = 0; s < numSources; s++) {
+    unsigned char redSource = *(loadedCudaColors + (s * COLOR_COMPONENTS) + REDMOD);
+    unsigned char greenSource = *(loadedCudaColors + (s * COLOR_COMPONENTS) + GREENMOD);
+    unsigned char blueSource = *(loadedCudaColors + (s * COLOR_COMPONENTS) + BLUEMOD);
+    float *partialScoresArr = *(partialCudaScores + s);
+    float scoresCont = *(partialScoresArr + pixelIndex);
+
+    effRed += redSource * scoresCont / pixelScore;
+    effGreen += greenSource * scoresCont / pixelScore;
+    effBlue += blueSource * scoresCont / pixelScore;
+  }
+
+  int contributionRed = (((int)effRed) - (*(cudaColorRaw + redIndex))) * computeContributionFactor(pixelScore);
+  int contributionGreen = (((int)effGreen) - (*(cudaColorRaw + greenIndex))) * computeContributionFactor(pixelScore);
+  int contributionBlue = (((int)effBlue) - (*(cudaColorRaw + blueIndex))) * computeContributionFactor(pixelScore);
+
+  *(cudaColors + redIndex) = min(255, (*(cudaColorRaw + redIndex)) + contributionRed);
+  *(cudaColors + greenIndex) = min(255, (*(cudaColorRaw + greenIndex)) + contributionGreen);
+  *(cudaColors + blueIndex) = min(255, (*(cudaColorRaw + blueIndex)) + contributionBlue);
+
+  return;
+}
+
 // takes in <color.png> <traced.png> and produces an <output.png>
 int main(int argc, char** argv) {
   if (argc != 5) {
@@ -160,8 +189,6 @@ int main(int argc, char** argv) {
 
   std::vector<lightray> lightSources;
   loadFromFile(argv[3], lightSources);
-  
-  png::rgb_pixel oneLight = png::rgb_pixel(255, 0, 0);
     
   png::image<png::rgb_pixel> colorImg(argv[1]);
   png::image<png::gray_pixel> tracedImg(argv[2]);
@@ -174,8 +201,6 @@ int main(int argc, char** argv) {
   }
 
   int numSources = lightSources.size();
-  std::vector<float*> multiScores;
-  multiScores.reserve(numSources);
   int pixelCount = rows * cols;
   size_t frameSize = pixelCount * sizeof(float);
 
@@ -192,45 +217,93 @@ int main(int argc, char** argv) {
  Timer rayTracerTimer;
 
   cudaMalloc(&cudaTrace, traceBufSize);
+
+  
   cudaMemcpy(cudaTrace, tracedImageRaw, traceBufSize, cudaMemcpyHostToDevice);
 
+  int scoresHoldSize = sizeof(float*) * numSources;
+  float** multiCudaScores = (float**)malloc(scoresHoldSize);
    
   for (int s = 0; s < numSources; s++) {
-    float* sourceScores = (float*)calloc(rows * cols, sizeof(float));
-    multiScores[s] = sourceScores;
     lightray source = lightSources[s];
     float* cudaScores;
     cudaMalloc(&cudaScores, frameSize);
     cudaMemset(cudaScores, 0, frameSize);
-
+    multiCudaScores[s] = cudaScores;
     // kernel time
     int blocks = (RAYCOUNT + NUMTHREADS - 1) / NUMTHREADS;
     fillPartialScores<<<blocks,NUMTHREADS>>>(cudaScores, source, rows, cols, cudaTrace);
-
-
-    cudaDeviceSynchronize(); // synchronize outside the loop after testing
-    cudaMemcpy(sourceScores, cudaScores, frameSize, cudaMemcpyDeviceToHost); // copy result outside of loop
-    cudaFree(cudaScores); // don't free just yet actually
-    break; // just to test first iteration
   }
 
-  printf("what is this: %f\n", *(multiScores[0] + 30));
+  cudaDeviceSynchronize(); // synchronize partial scores
+  // cudaMemcpy(sourceScores, cudaScores, frameSize, cudaMemcpyDeviceToHost); // copy result outside of loop
+  //  cudaFree(cudaScores); // don't free just yet actually
 
   cudaFree(cudaTrace);
   free(tracedImageRaw);
-  //return 0; // remove after cuda testing
 
-  float *singleScores = multiScores[0];
-  //void* singleScores = calloc(rows * cols * numSources, sizeof(float));
-  //float singleScores[rows][cols][numSources] = { 0 };
+  float** partialCudaScores;
+  cudaMalloc(&partialCudaScores, scoresHoldSize);
+  cudaMemcpy(partialCudaScores, multiCudaScores, scoresHoldSize, cudaMemcpyHostToDevice);
+
+  // allocate sources memory for cuda
+  int colorsMemSize = sizeof(char) * COLOR_COMPONENTS * numSources;
+  unsigned char* loadedColors = (unsigned char*)malloc(colorsMemSize);
+  for (int s = 0; s < numSources; s++) {
+    int colorIdx = s * COLOR_COMPONENTS;
+    loadedColors[colorIdx + REDMOD] = lightSources[s].color.red;
+    loadedColors[colorIdx + GREENMOD] = lightSources[s].color.green;
+    loadedColors[colorIdx + BLUEMOD] = lightSources[s].color.blue;
+  }
+
+  unsigned char* loadedCudaColors;
+  cudaMalloc(&loadedCudaColors, colorsMemSize);
+  cudaMemcpy(loadedCudaColors, loadedColors, colorsMemSize, cudaMemcpyHostToDevice);
+  free(loadedColors);
+
+  // compute actual color components for each contribution pixel
+  unsigned char* cudaColors; // layed out in memory as r0_g0_b0, r1_g1_b1, ...
+  unsigned char* hostColors;
+  cudaMalloc(&cudaColors, traceBufSize * COLOR_COMPONENTS);
+  hostColors = (unsigned char*)malloc(traceBufSize * COLOR_COMPONENTS);
+
+  unsigned char* colorImageRaw = (unsigned char*)malloc(traceBufSize * COLOR_COMPONENTS);
+  // copy into raw bytes
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      *(colorImageRaw + (r * cols * COLOR_COMPONENTS) + (c * COLOR_COMPONENTS) + REDMOD) = colorImg[r][c].red;
+      *(colorImageRaw + (r * cols * COLOR_COMPONENTS) + (c * COLOR_COMPONENTS) + GREENMOD) = colorImg[r][c].green;
+      *(colorImageRaw + (r * cols * COLOR_COMPONENTS) + (c * COLOR_COMPONENTS) + BLUEMOD) = colorImg[r][c].blue;
+    }
+  }
+  unsigned char* cudaColorRaw;
+  cudaMalloc(&cudaColorRaw, traceBufSize * COLOR_COMPONENTS);
+  cudaMemcpy(cudaColorRaw, colorImageRaw, traceBufSize * COLOR_COMPONENTS, cudaMemcpyHostToDevice);
+  free(colorImageRaw);
+
+  int colorBlocks = (pixelCount + NUMTHREADS - 1) / NUMTHREADS;
+  produceColors<<<colorBlocks,NUMTHREADS>>>(cudaColors, partialCudaScores, loadedCudaColors, numSources, cudaColorRaw, rows, cols);
+  cudaDeviceSynchronize();
+
+  cudaFree(cudaColorRaw);
+  cudaFree(loadedCudaColors);
+  cudaMemcpy(hostColors, cudaColors, traceBufSize * COLOR_COMPONENTS, cudaMemcpyDeviceToHost);
+  cudaFree(cudaColors);
+  cudaFree(partialCudaScores);
+  for (int s = 0; s < numSources; s++) {
+    float *cudaScore = multiCudaScores[s];
+    cudaFree(cudaScore);
+  }
+  free(multiCudaScores);
 
   // accumulate the contributions from each partial score onto the main image
-  colorOutput(colorImg, (float*)singleScores, lightSources, rows, cols, numSources);
+  colorOutput(hostColors, rows, cols, colorImg);
+  free(hostColors);
 
   double rayTracerTime = rayTracerTimer.elapsed();
   printf("total raytracer time: %.6fs\n", rayTracerTime);
 
   colorImg.write(argv[4]); // finished product
-  //free(singleScores);
+
   return 0;
 }

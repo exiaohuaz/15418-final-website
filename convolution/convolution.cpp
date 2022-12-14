@@ -67,16 +67,27 @@ int main(int argc, char** argv) {
     printf("total sequential simulation time: %.6fs\n", endTime - startTime);
     output.write("../images/outputConv.png");
 
-    
-    // this stuff is new and doesn't work
-    // png::image<png::gray_pixel> output_ispc(cols, rows);
-    // startTime = CycleTimer::currentSeconds();
-    // int total_elems = rows*cols;
-    // ispc::convolution_ispc(total_elems, img, output_ispc);
-    // endTime = CycleTimer::currentSeconds();
-    // verify(rows, cols, output, output_ispc);
-    // printf("total ispc simulation time: %.6fs\n", endTime - startTime);
-
+    /*
+    png::image<png::gray_pixel> output_ispc(cols, rows);
+    int input[cols*rows];
+    for(int i = 0; i<rows; i++){
+        for(int j = 0; j<cols; j++){
+            input[rows*i + j] = img[i][j];
+        }
+    }
+    int output[cols*rows];
+    startTime = CycleTimer::currentSeconds();
+    int total_elems = rows*cols;
+    ispc::convolution_ispc(total_elems, input, output);
+    endTime = CycleTimer::currentSeconds();
+    for(int i = 0; i<rows; i++){
+        for(int j = 0; j<cols; j++){
+            output_ispc[i][j] = rowss
+        }
+    }
+    verify(rows, cols, output, output_ispc);
+    printf("total ispc simulation time: %.6fs\n", endTime - startTime);
+    */
 
     png::image<png::gray_pixel> output_openmp(cols, rows);
     startTime = CycleTimer::currentSeconds();

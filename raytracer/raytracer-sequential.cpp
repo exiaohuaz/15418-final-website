@@ -12,16 +12,6 @@
 #include "timing.h"
 #include "common.h"
 
-#define RAYCOUNT 5000 // rays per source
-#define HIT_THRESHOLD 1000
-
-#define L1_THRESHOLD 1
-#define L2_THRESHOLD 170000
-
-const float incrRay = 0.1f;
-const float degradeFac = 0.98f;
-const float addFac = 100.f;
-
 bool rayInBox(Vec2<float> tl, Vec2<float> br, lightray mRay) {
   Vec2<float> brHead = br - (mRay.position);
   Vec2<float> tlHead = (mRay.position) - tl;
@@ -52,8 +42,6 @@ void updateRay(lightray *source, lightray *mRay, float *ss, int cols, int numSou
 }
 
 float computeContributionFactor(float score) {
-  const float tuningCnst = 0.0087209302; // constants derived by fitting to logarithmic function
-  const float tuningScale = 0.0820614573;
   if (score < L1_THRESHOLD) return 0.f;
   else if (score < L2_THRESHOLD) return tuningCnst + tuningScale * log(score);
   else return 1.f;
@@ -151,7 +139,8 @@ int main(int argc, char** argv) {
   }
 
   int numSources = lightSources.size();
-  float singleScores[rows][cols][numSources] = { 0 };
+  void* singleScores = calloc(rows * cols * numSources, sizeof(float));
+  //float singleScores[rows][cols][numSources] = { 0 };
 
   Timer rayTracerTimer;
   
@@ -167,5 +156,6 @@ int main(int argc, char** argv) {
   printf("total raytracer time: %.6fs\n", rayTracerTime);
 
   colorImg.write(argv[4]); // finished product
+  free(singleScores);
   return 0;
 }

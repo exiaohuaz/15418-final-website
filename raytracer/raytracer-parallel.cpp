@@ -171,3 +171,4 @@ int main(int argc, char** argv) {
   colorImg.write(argv[4]); // finished product
   return 0;
 }
+

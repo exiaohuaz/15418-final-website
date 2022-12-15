@@ -1,13 +1,13 @@
-#include <png.h>
+//#include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
-#include <zlib.h>
+//#include <zlib.h>
 #include <string>
 #include <png++/png.hpp>
 #include "vec2.h"
-#include <omp.h>
+//#include <omp.h>
 #include <math.h>
 #include "timing.h"
 #include "common.h"

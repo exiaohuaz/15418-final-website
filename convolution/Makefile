@@ -8,6 +8,9 @@ all: convolution
 convolution: convolution.cpp
 	$(CXX86) $(CXXFLAGS) $< -o $@ -fopenmp
 
+convolution-ext: convolution.cpp
+	$(CXX) $< `libpng-config --ldflags` -o convolution -fopenmp
+
 run: convolution ../images/$(IMAGE)
 	./convolution ../images/$(IMAGE)
 

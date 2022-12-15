@@ -56,6 +56,21 @@ def plotOfTerraSeqVsParOnMac():
     plt.legend(title="Scene")
     plt.show()
 
+# lower light source counts chosen to be sparse
+def plotOfTerraSeqVsCuda():
+    sourcesPointsGHC = np.array([
+        [1, 14.12701693942004],
+        [2, 24.783475262742492],
+        [4, 30.606299100535125],
+        [8, 46.841582906978665],
+        [16, 57.338629948720985],
+        [32, 72.48956130098914],
+        [64, 91.4222757655837],
+        [128, 98.23185189016053],
+        [256, 102.67158996038866],
+        [512, 104.97753805944215],
+        [1024, 107.3367227736005]
+    ])
 
 plotOfTerraSeqVsParOnMac()
 # graphIt(slt, "yellow", graphTitle, xLabel, yLabel, "sparse-200000")

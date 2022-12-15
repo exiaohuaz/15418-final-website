@@ -26,7 +26,7 @@ def main():
     imageString = subprocess.check_output("pwd", shell=True).decode().strip() + "/../images/"
     imageString += "terra.png"
     textFile = "lights.txt"
-    sourceNum = 40
+    sourceNum = 10
     minIntensity = 500
     incrIntensity = 500
     randomTest(imageString, sourceNum, minIntensity, incrIntensity, textFile)

@@ -35,6 +35,11 @@ run: raytrace-sequential raytrace-parallel imageCompare
 	./raytrace-parallel $(IMAGEDIR)/$(IMAGE) $(IMAGEDIR)/outputConv.png lights.txt $(IMAGEDIR)/outputPar.png
 	./imageCompare $(IMAGEDIR)/outputSeq.png $(IMAGEDIR)/outputPar.png
 
+lights:
+	python3 ../scripts/generateTests.py
+
+speed:
+	python3 ../scripts/speedup.py
 
 clean:
 	rm -rf raytrace-sequential raytrace-parallel raytrace-cuda imageCompare 

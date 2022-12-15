@@ -1,4 +1,4 @@
-# run file from top level directory
+# run file from within raytracer directory
 
 from PIL import Image
 import random
@@ -23,7 +23,7 @@ def randomTest(image, n, minIntensity, incr, textFile):
     f.close()
 
 def main():
-    imageString = subprocess.check_output("pwd", shell=True).decode().strip() + "/images/"
+    imageString = subprocess.check_output("pwd", shell=True).decode().strip() + "/../images/"
     imageString += "terra.png"
     textFile = "lights.txt"
     sourceNum = 40

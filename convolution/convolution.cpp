@@ -1,11 +1,12 @@
-#include <png.h>
-#include "/usr/local/include/png.h"
+//#include <png.h>
+//#include "/usr/local/include/png.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <zlib.h>
+//#include <zlib.h>
 #include <assert.h>
-#include "/usr/local/include/png++/png.hpp"
-#include "/usr/local/opt/libomp/include/omp.h"
+//#include "/usr/local/include/png++/png.hpp"
+//#include "/usr/local/opt/libomp/include/omp.h"
+#include <png++/png.hpp>
 #include "timing.h"
 #include "CycleTimer.h"
 #include "convolution_ispc.h"

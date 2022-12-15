@@ -25,7 +25,7 @@ rays-par: raytracer-parallel.cpp
 
 # This will only work on machine with Nvida GPU
 rays-cuda: raytracer.cu
-	nvcc raytracer.cu `libpng-config --ldflags` -o raytracer-cuda
+	nvcc raytracer.cu `libpng-config --ldflags` -o raytrace-cuda
 
 compare: imageCompare.cpp
 	x86_64-apple-darwin21-g++-12 $(CPPFLAGS) imageCompare.cpp -o imageCompare
@@ -37,7 +37,7 @@ run: raytrace-sequential raytrace-parallel imageCompare
 
 
 clean:
-	rm -rf raytrace-sequential raytrace-parallel raytracer-cuda imageCompare 
+	rm -rf raytrace-sequential raytrace-parallel raytrace-cuda imageCompare 
 	rm -rf $(IMAGEDIR)/outputCuda.png $(IMAGEDIR)/outputSeq.png $(IMAGEDIR)/outputPar.png $(IMAGEDIR)/outputConv.png 
 	rm -rf lights.txt
 

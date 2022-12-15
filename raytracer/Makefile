@@ -6,6 +6,17 @@ all: rays compare
 
 rays: rays-seq rays-par
 
+rays-ext: rays-seq-ext rays-par-ext compare-ext rays-cuda
+	
+rays-seq-ext:
+	g++ raytracer-sequential.cpp `libpng-config --ldflags` -o raytrace-sequential
+
+rays-par-ext:
+	g++ raytracer-parallel.cpp `libpng-config --ldflags` -o raytrace-parallel -fopenmp
+
+compare-ext:
+	g++ imageCompare.cpp `libpng-config --ldflags` -o imageCompare
+
 rays-seq: raytracer-sequential.cpp
 	x86_64-apple-darwin21-g++-12 $(CPPFLAGS) raytracer-sequential.cpp -o raytrace-sequential
 

@@ -20,6 +20,9 @@ runout: convolution ../images/$(IMAGE)
 runprof: convolution ../images/$(IMAGE)
 	./convolution ../images/$(IMAGE) --profile $(NUMTHREADS)
 
+runprof-ext: convolution-ext ../images/$(IMAGE)
+	./convolution ../images/$(IMAGE) --profile $(NUMTHREADS)
+
 clean:
 	rm -rf convolution
 	rm -rf ../images/outputConv.png

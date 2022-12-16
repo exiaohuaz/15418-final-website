@@ -139,13 +139,23 @@ def plotOfTerraSeqVsCudaRays():
     ])
 
 def plotOfTerraSeqVsParConvolution():
-    macSpeeds = np.array[
+    macSpeeds = np.array([
         [1, 0.998737],
         [2, 1.936804],
         [4, 3.626285],
         [8, 4.423789],
         [16, 4.275551]
-    ]
+    ])
+
+    GHCspeeds = np.array([
+        [1, 0.956488],
+        [2, 1.882255],
+        [4, 3.710230],
+        [8, 7.287486],
+        [16, 7.096235]
+    ])
+
+    PSCspeeds = None
 
 plotOfTerraSeqVsParOnMacRays()
 # graphIt(slt, "yellow", graphTitle, xLabel, yLabel, "sparse-200000")

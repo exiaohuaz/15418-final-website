@@ -68,23 +68,29 @@ int main(int argc, char** argv) {
         const int iterations = 3;
         double totalSeqTime = 0;
         double totalParTime = 0;
-        for (int i = 0; i < iterations; i++) {
+        for (int i = 0; i < iterations + 1; i++) {
             double startTime = CycleTimer::currentSeconds();
             convolution_sequential(rows, cols, img, output);
             double endTime = CycleTimer::currentSeconds();
+
+            if (i == 0) continue; // rid locality benefit
+
             double delTime = endTime - startTime;
             totalSeqTime += delTime;
-            printf("total sequential time trial %d: %.6fs\n", i, delTime);
+            printf("total sequential time trial %d: %.6fs\n", i - 1, delTime);
         }
 
         int numThreads = atoi(argv[3]);
         omp_set_num_threads(numThreads);
 
         png::image<png::gray_pixel> output_openmp(cols, rows);
-        for (int i = 0; i < iterations; i++) {
+        for (int i = 0; i < iterations + 1; i++) {
             double startTime = CycleTimer::currentSeconds();
             convolution_openmp(rows, cols, img, output_openmp);
             double endTime = CycleTimer::currentSeconds();
+
+            if (i == 0) continue; // rid locality benefit
+            
             double delTime = endTime - startTime;
             totalParTime += delTime;
             printf("total OpenMP time trial %d: %.6fs\n", i, delTime);

@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
     int inputarr[cols*rows];
     for(int i = 0; i<rows; i++){
         for(int j = 0; j<cols; j++){
-            inputarr[rows*i + j] = img[i][j];
+            inputarr[cols*i + j] = img[i][j];
         }
     }
     int outputarr[cols*rows];
@@ -122,11 +122,11 @@ int main(int argc, char** argv) {
     endTime = CycleTimer::currentSeconds();
     for(int i = 0; i<rows; i++){
         for(int j = 0; j<cols; j++){
-            output_ispc[i][j] = outputarr[rows*i + j];
+            output_ispc[i][j] = outputarr[cols*i + j];
         }
     }
     output_ispc.write("../images/new.png");
-    //verify(rows, cols, output, output_ispc);
+    verify(rows, cols, output, output_ispc);
     printf("total ispc simulation time: %.6fs\n", endTime - startTime);
     
 

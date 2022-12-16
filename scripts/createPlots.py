@@ -12,7 +12,7 @@ def plotIt(dt, color, title, xLabel, yLabel, sceneLabel):
     plt.xlabel(xLabel)
     plt.ylabel(yLabel)
 
-def plotOfTerraSeqVsParOnMac():
+def plotOfTerraSeqVsParOnMacRays():
     oneSourceSpeedup = np.array([
         [1, 1.000552881042825],
         [2, 1.9822300976087563],
@@ -123,7 +123,7 @@ def plotOfTerraSeqVsParOnMac():
     plt.show()
 
 # lower light source counts chosen to be sparse
-def plotOfTerraSeqVsCuda():
+def plotOfTerraSeqVsCudaRays():
     sourcesPointsGHC = np.array([
         [1, 14.12701693942004],
         [2, 24.783475262742492],
@@ -138,7 +138,16 @@ def plotOfTerraSeqVsCuda():
         [1024, 107.3367227736005]
     ])
 
-plotOfTerraSeqVsParOnMac()
+def plotOfTerraSeqVsParConvolution():
+    macSpeeds = np.array[
+        [1, 0.998737],
+        [2, 1.936804],
+        [4, 3.626285],
+        [8, 4.423789],
+        [16, 4.275551]
+    ]
+
+plotOfTerraSeqVsParOnMacRays()
 # graphIt(slt, "yellow", graphTitle, xLabel, yLabel, "sparse-200000")
 
 

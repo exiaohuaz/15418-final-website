@@ -1,6 +1,6 @@
 //not sure if this is valid lol
-int indices[9][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
-int mask[3][3] = {
+int indexes[9][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+int masks[3][3] = {
                 {-1, -1, -1},
                 {-1, 8, -1},
                 {-1, -1, -1}
@@ -9,15 +9,15 @@ int mask[3][3] = {
 //not sure what types to make values and output
 export void convolution_ispc(uniform int rows, 
                           uniform int cols,
-                          uniform int values[],
+                          uniform int input[],
                           uniform int output[])
 {
     foreach(i = 1 ... rows-1, j = 1 ... cols-1){
         int index = rows*i + j;
         int sum = 0;
         for(int loc = 0; loc < 9; loc++) {
-            int compute_index = rows*(i+indices[loc][0]) + (j+indices[loc][1]);
-            sum += values[compute_index] * mask[1+indices[loc][0]][1+indices[loc][1]];
+            int compute_index = rows*(i+indexes[loc][0]) + (j+indexes[loc][1]);
+            sum += input[compute_index] * masks[1+indexes[loc][0]][1+indexes[loc][1]];
         }
         output[index] = sum<=120?255:0;
     }

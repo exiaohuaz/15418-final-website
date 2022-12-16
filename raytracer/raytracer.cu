@@ -214,10 +214,10 @@ int main(int argc, char** argv) {
   }
   char* cudaTrace;
 
- Timer rayTracerTimer;
+ 
 
   cudaMalloc(&cudaTrace, traceBufSize);
-
+  Timer rayTracerTimer;
   
   cudaMemcpy(cudaTrace, tracedImageRaw, traceBufSize, cudaMemcpyHostToDevice);
 

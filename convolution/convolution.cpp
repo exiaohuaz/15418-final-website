@@ -1,14 +1,16 @@
-#include <png.h>
-#include "/usr/local/include/png.h"
+//#include <png.h>
+//#include "/usr/local/include/png.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <zlib.h>
+//#include <zlib.h>
 #include <assert.h>
-#include "/usr/local/include/png++/png.hpp"
-#include "/usr/local/opt/libomp/include/omp.h"
+//#include "/usr/local/include/png++/png.hpp"
+//#include "/usr/local/opt/libomp/include/omp.h"
+#include <png++/png.hpp>
 #include "timing.h"
 #include "CycleTimer.h"
 #include "convolution_ispc.h"
+#include <omp.h>
 
 typedef std::pair<int,int> P;
 P indices[9] = {P(-1, -1), P(-1, 0), P(-1, 1), P(0, -1),  P(0, 0),  P(0, 1), P(1, -1),  P(1, 0),  P(1, 1)};
@@ -60,7 +62,46 @@ int main(int argc, char** argv) {
     printf("rows: %d  cols: %d\n", rows, cols);
     png::image<png::gray_pixel> output(cols, rows);
 
+    if (argc > 3 && strcmp(argv[2], "--profile") == 0) {
+        // profile code
+        printf("Profiling code...\n");
+        const int iterations = 3;
+        double totalSeqTime = 0;
+        double totalParTime = 0;
+        for (int i = 0; i < iterations + 1; i++) {
+            double startTime = CycleTimer::currentSeconds();
+            convolution_sequential(rows, cols, img, output);
+            double endTime = CycleTimer::currentSeconds();
 
+            if (i == 0) continue; // rid locality benefit
+
+            double delTime = endTime - startTime;
+            totalSeqTime += delTime;
+            printf("total sequential time trial %d: %.6fs\n", i - 1, delTime);
+        }
+
+        int numThreads = atoi(argv[3]);
+        omp_set_num_threads(numThreads);
+
+        png::image<png::gray_pixel> output_openmp(cols, rows);
+        for (int i = 0; i < iterations + 1; i++) {
+            double startTime = CycleTimer::currentSeconds();
+            convolution_openmp(rows, cols, img, output_openmp);
+            double endTime = CycleTimer::currentSeconds();
+
+            if (i == 0) continue; // rid locality benefit
+            
+            double delTime = endTime - startTime;
+            totalParTime += delTime;
+            printf("total OpenMP time trial %d: %.6fs\n", i, delTime);
+        }
+
+        double avgSeq = totalSeqTime / iterations;
+        double avgPar = totalParTime / iterations;
+        double speedup = avgSeq / avgPar;
+        printf("Total Speedup for Convolution on %d threads: %f\n", numThreads, speedup);
+        return 0;
+    }
     double startTime = CycleTimer::currentSeconds();
     convolution_sequential(rows, cols, img, output);
     double endTime = CycleTimer::currentSeconds();

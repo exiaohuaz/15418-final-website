@@ -8,8 +8,9 @@ NUMTHREADS=1 # set argument from cmdline for testing
 
 all: convolution
 
-convolution: convolution.cpp
-	$(CXX86) $(CXXFLAGS) $< -o $@ -fopenmp
+convolution: convolution.cpp convolution.ispc
+	ispc convolution.ispc -o convolution_ispc.o -h convolution_ispc.h
+	$(CXX86) $(CXXFLAGS) convolution.cpp convolution_ispc.o -o $@ -fopenmp
 
 convolution-ext: convolution.cpp
 	$(CXX) $< `libpng-config --ldflags` $(BRIDGESFLAGS) -o convolution -fopenmp
@@ -25,4 +26,5 @@ runprof-ext: convolution-ext ../images/$(IMAGE)
 
 clean:
 	rm -rf convolution
+	rm -rf convolution_ispc.o
 	rm -rf ../images/outputConv.png

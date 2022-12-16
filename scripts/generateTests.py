@@ -1,5 +1,8 @@
+# run file from within raytracer directory
+
 from PIL import Image
 import random
+import subprocess
 
 def randomTest(image, n, minIntensity, incr, textFile):
     myImg = Image.open(image)
@@ -20,10 +23,10 @@ def randomTest(image, n, minIntensity, incr, textFile):
     f.close()
 
 def main():
-    imageString = "/Users/rahulkhandelwal/Library/CloudStorage/OneDrive-andrew.cmu.edu/CMU/Junior Fall/15-418/final_project_15418/images/"
+    imageString = subprocess.check_output("pwd", shell=True).decode().strip() + "/../images/"
     imageString += "terra.png"
     textFile = "lights.txt"
-    sourceNum = 40
+    sourceNum = 10
     minIntensity = 500
     incrIntensity = 500
     randomTest(imageString, sourceNum, minIntensity, incrIntensity, textFile)

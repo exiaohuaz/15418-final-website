@@ -10,11 +10,7 @@
 #include "timing.h"
 #include "CycleTimer.h"
 #include "convolution_ispc.h"
-<<<<<<< HEAD
 //#include <omp.h>
-=======
-#include <omp.h>
->>>>>>> 8988f3a8869109f08f1db79be82bcdfa100174cc
 
 typedef std::pair<int,int> P;
 P indices[9] = {P(-1, -1), P(-1, 0), P(-1, 1), P(0, -1),  P(0, 0),  P(0, 1), P(1, -1),  P(1, 0),  P(1, 1)};
@@ -59,8 +55,7 @@ void convolution_openmp(int rows, int cols, png::image<png::gray_pixel> &img, pn
     }
 }
 
-<<<<<<< HEAD
-void run_ispc(int rows, int cols, png::image<png::gray_pixel> &img, png::image<png::gray_pixel> &output){
+void run_ispc(int rows, int cols, png::image<png::gray_pixel> &img){
     png::image<png::gray_pixel> output_ispc(cols, rows);
     double beforeCopy = CycleTimer::currentSeconds();
     int inputarr[cols*rows];
@@ -80,45 +75,37 @@ void run_ispc(int rows, int cols, png::image<png::gray_pixel> &img, png::image<p
     }
     double afterCopy = CycleTimer::currentSeconds();
     output_ispc.write("../images/new.png");
-    verify(rows, cols, output, output_ispc);
     printf("total ispc simulation time: %.6fs\n", endTime - startTime);
     printf("total ispc time including copying: %.6fs\n", afterCopy - beforeCopy);
 }
 
 
-void run_ispc_with_openmp_tasks(int rows, int cols, png::image<png::gray_pixel> &img, png::image<png::gray_pixel> &output){
+void run_ispc_with_openmp_tasks(int rows, int cols, png::image<png::gray_pixel> &img){
     int numTasks = 8;
     int rowsPerTask = ((rows - 2) / numTasks); //might not get all the rows...
     png::image<png::gray_pixel> output_ispc(cols, rows);
     int inputarr[cols*rows];
-    double beforeCopy = CycleTimer::currentSeconds();
     for(int i = 0; i<rows; i++){
         for(int j = 0; j<cols; j++){
             inputarr[cols*i + j] = img[i][j];
         }
     }
     int outputarr[cols*rows];
-    double startTime = CycleTimer::currentSeconds();
     #pragma omp parallel for
     for(int taskIndex = 0; taskIndex < numTasks; taskIndex++){
         int rowstart = taskIndex * rowsPerTask + 1;
         int rowend = std::min(rowstart + rowsPerTask, rows - 1);
         ispc::convolution_ispc_task(rowstart, rowend, cols, inputarr, outputarr);
     }
-    double endTime = CycleTimer::currentSeconds();
     for(int i = 0; i<rows; i++){
         for(int j = 0; j<cols; j++){
             output_ispc[i][j] = outputarr[cols*i + j];
         }
     }
-    double afterCopy = CycleTimer::currentSeconds();
-    printf("total ispc with openmp simulation time: %.6fs\n", endTime - startTime);
-    printf("total ispc with openmp time including copying: %.6fs\n", afterCopy - beforeCopy);
-    output_ispc.write("../images/withtasks.png");
+    output_ispc.write("../images/convolution_output.png");
 }
 
-=======
->>>>>>> 8988f3a8869109f08f1db79be82bcdfa100174cc
+
 int main(int argc, char** argv) {
     png::image<png::gray_pixel> img(argv[1]);
     int rows = img.get_height();
@@ -143,13 +130,12 @@ int main(int argc, char** argv) {
             totalSeqTime += delTime;
             printf("total sequential time trial %d: %.6fs\n", i - 1, delTime);
         }
+        double avgSeq = totalSeqTime / iterations;
+
+
 
         int numThreads = atoi(argv[3]);
-<<<<<<< HEAD
         //omp_set_num_threads(numThreads);
-=======
-        omp_set_num_threads(numThreads);
->>>>>>> 8988f3a8869109f08f1db79be82bcdfa100174cc
 
         png::image<png::gray_pixel> output_openmp(cols, rows);
         for (int i = 0; i < iterations + 1; i++) {
@@ -164,51 +150,122 @@ int main(int argc, char** argv) {
             printf("total OpenMP time trial %d: %.6fs\n", i, delTime);
         }
 
-        double avgSeq = totalSeqTime / iterations;
         double avgPar = totalParTime / iterations;
         double speedup = avgSeq / avgPar;
-        printf("Total Speedup for Convolution on %d threads: %f\n", numThreads, speedup);
-        return 0;
+        printf("Total Speedup for OpenMP Convolution on %d threads: %f\n", numThreads, speedup);
+
+
+        totalParTime = 0.0;
+        int inputarr[cols*rows];
+        for(int i = 0; i<rows; i++){
+            for(int j = 0; j<cols; j++){
+                inputarr[cols*i + j] = img[i][j];
+            }
+        }
+        int outputarr[cols*rows];
+        for (int i = 0; i < iterations + 1; i++) {
+            double startTime = CycleTimer::currentSeconds();
+            ispc::convolution_ispc(rows, cols, inputarr, outputarr);
+            double endTime = CycleTimer::currentSeconds();
+
+            if (i == 0) continue; // rid locality benefit
+            
+            double delTime = endTime - startTime;
+            totalParTime += delTime;
+            printf("total ISPC (exclude copy) time trial %d: %.6fs\n", i, delTime);
+        }
+        avgPar = totalParTime / iterations;
+        speedup = avgSeq / avgPar;
+        printf("Total Speedup for ISPC (exclude copy) Convolution on %d threads: %f\n", numThreads, speedup);
+
+
+        totalParTime = 0.0;
+        png::image<png::gray_pixel> output_ispc(cols, rows);
+        for (int i = 0; i < iterations + 1; i++) {
+            double startTime = CycleTimer::currentSeconds();
+            for(int i = 0; i<rows; i++){
+                for(int j = 0; j<cols; j++){
+                    inputarr[cols*i + j] = img[i][j];
+                }
+            }
+            ispc::convolution_ispc(rows, cols, inputarr, outputarr);
+            for(int i = 0; i<rows; i++){
+                for(int j = 0; j<cols; j++){
+                    output_ispc[i][j] = outputarr[cols*i + j];
+                }
+            }
+            double endTime = CycleTimer::currentSeconds();
+
+            if (i == 0) continue; // rid locality benefit
+            
+            double delTime = endTime - startTime;
+            totalParTime += delTime;
+            printf("total ISPC (include copy) time trial %d: %.6fs\n", i, delTime);
+        }
+
+        avgPar = totalParTime / iterations;
+        speedup = avgSeq / avgPar;
+        printf("Total Speedup for ISPC (include copy) Convolution on %d threads: %f\n", numThreads, speedup);
+
+        totalParTime = 0.0;
+        int numTasks = 8;
+        int rowsPerTask = ((rows - 2) / numTasks); //might not get all the rows...
+        for (int i = 0; i < iterations + 1; i++) {
+            double startTime = CycleTimer::currentSeconds();
+            #pragma omp parallel for
+            for(int taskIndex = 0; taskIndex < numTasks; taskIndex++){
+                int rowstart = taskIndex * rowsPerTask + 1;
+                int rowend = std::min(rowstart + rowsPerTask, rows - 1);
+                ispc::convolution_ispc_task(rowstart, rowend, cols, inputarr, outputarr);
+            }
+            double endTime = CycleTimer::currentSeconds();
+
+            if (i == 0) continue; // rid locality benefit
+            
+            double delTime = endTime - startTime;
+            totalParTime += delTime;
+            printf("total ISPC OpenMP Task (exclude copy) time trial %d: %.6fs\n", i, delTime);
+        }
+
+        avgPar = totalParTime / iterations;
+        speedup = avgSeq / avgPar;
+        printf("Total Speedup for ISPC OpenMP (exclude copy) Convolution on %d threads: %f\n", numThreads, speedup);
+        
+
+        totalParTime = 0.0;
+        for (int i = 0; i < iterations + 1; i++) {
+            double startTime = CycleTimer::currentSeconds();
+            for(int i = 0; i<rows; i++){
+                for(int j = 0; j<cols; j++){
+                    inputarr[cols*i + j] = img[i][j];
+                }
+            }
+            #pragma omp parallel for
+            for(int taskIndex = 0; taskIndex < numTasks; taskIndex++){
+                int rowstart = taskIndex * rowsPerTask + 1;
+                int rowend = std::min(rowstart + rowsPerTask, rows - 1);
+                ispc::convolution_ispc_task(rowstart, rowend, cols, inputarr, outputarr);
+            }
+            for(int i = 0; i<rows; i++){
+                for(int j = 0; j<cols; j++){
+                    output_ispc[i][j] = outputarr[cols*i + j];
+                }
+            }
+            double endTime = CycleTimer::currentSeconds();
+
+            if (i == 0) continue; // rid locality benefit
+            
+            double delTime = endTime - startTime;
+            totalParTime += delTime;
+            printf("total ISPC OpenMP Task (include copy) time trial %d: %.6fs\n", i, delTime);
+        }
+
+        avgPar = totalParTime / iterations;
+        speedup = avgSeq / avgPar;
+        printf("Total Speedup for ISPC OpenMP (include copy) Convolution on %d threads: %f\n", numThreads, speedup);
     }
-    double startTime = CycleTimer::currentSeconds();
-    convolution_sequential(rows, cols, img, output);
-    double endTime = CycleTimer::currentSeconds();
-    printf("total sequential simulation time: %.6fs\n", endTime - startTime);
-    output.write("../images/outputConv.png");
-
-    
-    run_ispc(rows, cols, img, output);
-
-    run_ispc_with_openmp_tasks(rows, cols, img, output);
-    // png::image<png::gray_pixel> output_ispc_task(cols, rows);
-    // beforeCopy = CycleTimer::currentSeconds();
-    // int inputtask[cols*rows];
-    // for(int i = 0; i<rows; i++){
-    //     for(int j = 0; j<cols; j++){
-    //         inputtask[cols*i + j] = img[i][j];
-    //     }
-    // }
-    // int outputtask[cols*rows];
-    // startTime = CycleTimer::currentSeconds();
-    // ispc::convolution_ispc_withtasks(rows, cols, inputtask, outputtask);
-    // endTime = CycleTimer::currentSeconds();
-    // for(int i = 0; i<rows; i++){
-    //     for(int j = 0; j<cols; j++){
-    //         output_ispc[i][j] = outputtask[cols*i + j];
-    //     }
-    // }
-    // afterCopy = CycleTimer::currentSeconds();
-    // output_ispc.write("../images/new1.png");
-    // verify(rows, cols, output, output_ispc);
-    // printf("total ispc simulation time with task: %.6fs\n", endTime - startTime);
-    // printf("total ispc time including copying with task: %.6fs\n", afterCopy - beforeCopy);
-    
-
-    png::image<png::gray_pixel> output_openmp(cols, rows);
-    startTime = CycleTimer::currentSeconds();
-    convolution_openmp(rows, cols, img, output_openmp);
-    endTime = CycleTimer::currentSeconds();
-    verify(rows, cols, output, output_openmp);
-    printf("total openmp simulation time: %.6fs\n", endTime - startTime);
-    printf("openmp and sequential outputs match!\n");
+    else{
+        run_ispc_with_openmp_tasks(rows, cols, img);
+    }
+    return 0;
 }

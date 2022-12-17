@@ -10,7 +10,11 @@
 #include "timing.h"
 #include "CycleTimer.h"
 #include "convolution_ispc.h"
+<<<<<<< HEAD
 //#include <omp.h>
+=======
+#include <omp.h>
+>>>>>>> 8988f3a8869109f08f1db79be82bcdfa100174cc
 
 typedef std::pair<int,int> P;
 P indices[9] = {P(-1, -1), P(-1, 0), P(-1, 1), P(0, -1),  P(0, 0),  P(0, 1), P(1, -1),  P(1, 0),  P(1, 1)};
@@ -55,6 +59,7 @@ void convolution_openmp(int rows, int cols, png::image<png::gray_pixel> &img, pn
     }
 }
 
+<<<<<<< HEAD
 void run_ispc(int rows, int cols, png::image<png::gray_pixel> &img, png::image<png::gray_pixel> &output){
     png::image<png::gray_pixel> output_ispc(cols, rows);
     double beforeCopy = CycleTimer::currentSeconds();
@@ -112,6 +117,8 @@ void run_ispc_with_openmp_tasks(int rows, int cols, png::image<png::gray_pixel> 
     output_ispc.write("../images/withtasks.png");
 }
 
+=======
+>>>>>>> 8988f3a8869109f08f1db79be82bcdfa100174cc
 int main(int argc, char** argv) {
     png::image<png::gray_pixel> img(argv[1]);
     int rows = img.get_height();
@@ -138,7 +145,11 @@ int main(int argc, char** argv) {
         }
 
         int numThreads = atoi(argv[3]);
+<<<<<<< HEAD
         //omp_set_num_threads(numThreads);
+=======
+        omp_set_num_threads(numThreads);
+>>>>>>> 8988f3a8869109f08f1db79be82bcdfa100174cc
 
         png::image<png::gray_pixel> output_openmp(cols, rows);
         for (int i = 0; i < iterations + 1; i++) {

@@ -22,6 +22,7 @@ export void convolution_ispc(uniform int rows,
     }
 }
 
+<<<<<<< HEAD
 export void convolution_ispc_task(uniform int rowstart, uniform int rowend,
                           uniform int cols,
                           uniform int input[],
@@ -76,4 +77,18 @@ export void convolution_ispc_withtasks(
     launch[threadCount] convolution_ispc_task(rows, cols, rowsPerTask, values, output);
 }
 */
+=======
+
+/*
+export void convolution_ispc_withtasks(uniform int rows, 
+                          uniform int cols,
+                          int values[][],
+                          int output[][])
+{
+    uniform int threadCount = 8;
+    uniform int rowsPerTask = (rows / threadCount);
+    launch[threadCount] convolution_ispc_task(rowsPerTask, cols, values, output);
+}*/
+
+>>>>>>> 8988f3a8869109f08f1db79be82bcdfa100174cc
 

@@ -223,11 +223,59 @@ def plotOfTerraSeqVsParConvolution():
         [16, 7.096235]
     ])
 
-    PSCspeeds = None
+    plt.rcParams["figure.figsize"] = [9.50, 5.50]
+    plt.rcParams["figure.autolayout"] = True
 
+    xLabel = "Number of Threads"
+    yLabel = "Speedup (relative to sequential)"
+    title = "Speedup of Convolution with OpenMP Threads"
+
+    plotIt(macSpeeds, "turquoise", title, xLabel, yLabel, "OpenMP Mac", "h")
+    plotIt(GHCspeeds, "gold", title, xLabel, yLabel, "OpenMP GHC", "s")
+
+    plt.legend(title="Platform")
+    plt.show()
+
+
+def plotOfISPCTaskSpeedup():
+    GHCspeeds_nocopy = np.array([
+        [1, 19.296965],
+        [2, 38.224314],
+        [4, 69.666616],
+        [5, 7.896904],
+        [6, 7.037916],
+        [7, 8.051830],
+        [8, 7.856346],
+        [9, 52.906084],
+        [10, 47.927116],
+        [11, 50.240396],
+        [12, 49.760862],
+        [16, 49.221255]
+    ])
+    GHCspeeds = np.array([
+        [1, 4.344882],
+        [2, 4.717940],
+        [4, 4.948327],
+        [8, 3.335492],
+        [16, 4.900920]
+    ])
+
+    plt.rcParams["figure.figsize"] = [9.50, 5.50]
+    plt.rcParams["figure.autolayout"] = True
+
+    xLabel = "Number of Tasks"
+    yLabel = "Speedup (relative to sequential)"
+    title = "Speedup of Convolution with ISPC and OpenMP Threads"
+
+    plotIt(GHCspeeds_nocopy, "turquoise", title, xLabel, yLabel, "Exclude Copy Overhead GHC", "h")
+    plotIt(GHCspeeds, "turquoise", title, xLabel, yLabel, "Include Copy Overhead GHC", "s")
+
+    plt.legend(title="Platform")
+    plt.show()
+
+plotOfISPCTaskSpeedup()
+#plotOfTerraSeqVsParConvolution()
 #plotOfTerraSeqVsParOnMacRays()
 #plotOfTerraSeqVsCudaRays()
-
-plotOfPartialScoresSegmentPercentage()
-
+#plotOfPartialScoresSegmentPercentage()
 

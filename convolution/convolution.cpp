@@ -10,7 +10,7 @@
 #include "timing.h"
 #include "CycleTimer.h"
 #include "convolution_ispc.h"
-//#include <omp.h>
+#include <omp.h>
 
 typedef std::pair<int,int> P;
 P indices[9] = {P(-1, -1), P(-1, 0), P(-1, 1), P(0, -1),  P(0, 0),  P(0, 1), P(1, -1),  P(1, 0),  P(1, 1)};
@@ -131,11 +131,12 @@ int main(int argc, char** argv) {
             printf("total sequential time trial %d: %.6fs\n", i - 1, delTime);
         }
         double avgSeq = totalSeqTime / iterations;
+        printf("------------------ average total sequential time: %.6fs\n", avgSeq);
 
 
 
         int numThreads = atoi(argv[3]);
-        //omp_set_num_threads(numThreads);
+        omp_set_num_threads(numThreads);
 
         png::image<png::gray_pixel> output_openmp(cols, rows);
         for (int i = 0; i < iterations + 1; i++) {

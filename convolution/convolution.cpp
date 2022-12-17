@@ -58,13 +58,13 @@ void convolution_openmp(int rows, int cols, png::image<png::gray_pixel> &img, pn
 void run_ispc(int rows, int cols, png::image<png::gray_pixel> &img){
     png::image<png::gray_pixel> output_ispc(cols, rows);
     double beforeCopy = CycleTimer::currentSeconds();
-    int inputarr[cols*rows];
+    int *inputarr = (int*)malloc(cols*rows*sizeof(int));
     for(int i = 0; i<rows; i++){
         for(int j = 0; j<cols; j++){
             inputarr[cols*i + j] = img[i][j];
         }
     }
-    int outputarr[cols*rows];
+    int *outputarr = (int*)malloc(cols*rows*sizeof(int));
     double startTime = CycleTimer::currentSeconds();
     ispc::convolution_ispc(rows, cols, inputarr, outputarr);
     double endTime = CycleTimer::currentSeconds();
@@ -82,15 +82,15 @@ void run_ispc(int rows, int cols, png::image<png::gray_pixel> &img){
 
 void run_ispc_with_openmp_tasks(int rows, int cols, png::image<png::gray_pixel> &img){
     int numTasks = 8;
-    int rowsPerTask = ((rows - 2) / numTasks); //might not get all the rows...
+    int rowsPerTask = ((rows - 2) / numTasks);
     png::image<png::gray_pixel> output_ispc(cols, rows);
-    int inputarr[cols*rows];
+    int *inputarr = (int*)malloc(cols*rows*sizeof(int));
     for(int i = 0; i<rows; i++){
         for(int j = 0; j<cols; j++){
             inputarr[cols*i + j] = img[i][j];
         }
     }
-    int outputarr[cols*rows];
+    int *outputarr = (int*)malloc(cols*rows*sizeof(int));
     #pragma omp parallel for
     for(int taskIndex = 0; taskIndex < numTasks; taskIndex++){
         int rowstart = taskIndex * rowsPerTask + 1;
@@ -156,13 +156,13 @@ int main(int argc, char** argv) {
 
 
         totalParTime = 0.0;
-        int inputarr[cols*rows];
+        int *inputarr = (int*)malloc(cols*rows*sizeof(int));
         for(int i = 0; i<rows; i++){
             for(int j = 0; j<cols; j++){
                 inputarr[cols*i + j] = img[i][j];
             }
         }
-        int outputarr[cols*rows];
+        int *outputarr = (int*)malloc(cols*rows*sizeof(int));
         for (int i = 0; i < iterations + 1; i++) {
             double startTime = CycleTimer::currentSeconds();
             ispc::convolution_ispc(rows, cols, inputarr, outputarr);

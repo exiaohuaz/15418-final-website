@@ -44,6 +44,6 @@ speed:
 
 clean:
 	rm -rf raytrace-sequential raytrace-parallel raytrace-cuda imageCompare 
-	rm -rf $(IMAGEDIR)/outputCuda.png $(IMAGEDIR)/outputSeq.png $(IMAGEDIR)/outputPar.png $(IMAGEDIR)/outputConv.png 
+	rm -rf $(IMAGEDIR)/outputCuda.png $(IMAGEDIR)/outputSeq.png $(IMAGEDIR)/outputPar.png
 	rm -rf lights.txt
 

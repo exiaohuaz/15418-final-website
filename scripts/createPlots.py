@@ -3,11 +3,11 @@
 from matplotlib import pyplot as plt
 import numpy as np
 
-def plotIt(dt, color, title, xLabel, yLabel, sceneLabel):
+def plotIt(dt, color, title, xLabel, yLabel, sceneLabel, plotMarker):
     x = dt[:, 0].reshape(dt.shape[0], 1)
     y = dt[:, 1].reshape(dt.shape[0], 1)
-    plt.plot(x, y, color=color, label=sceneLabel)
-    plt.scatter(x, y, color=color)
+    plt.plot(x, y, color=color, label=sceneLabel, marker=plotMarker)
+    #plt.scatter(x, y, color=color)
     plt.title(title)
     plt.xlabel(xLabel)
     plt.ylabel(yLabel)
@@ -18,7 +18,8 @@ def plotOfTerraSeqVsParOnMacRays():
         [2, 1.9822300976087563],
         [4, 3.748199261545911],
         [8, 4.878900899090617],
-        [16, 4.800114745250956]
+        [16, 4.800114745250956],
+        [32, 4.6393907244619585]
     ])
 
     fiveSourcesSpeedup = np.array([
@@ -27,6 +28,7 @@ def plotOfTerraSeqVsParOnMacRays():
           [4, 3.8764166036903855],
           [8, 5.1293736805785635],
           [16, 5.0108752085048],
+          [32, 4.827344669774165]
     ])
 
     tenSourcesSpeedup = np.array([
@@ -34,7 +36,8 @@ def plotOfTerraSeqVsParOnMacRays():
         [2, 2.053155692971682],
         [4, 3.76025084567074],
         [8, 5.0717494575146596],
-        [16, 5.067638226650999]
+        [16, 5.067638226650999],
+        [32, 4.9431755090143925]
     ])
 
     oneSourceSpeedupGHC = np.array([
@@ -113,12 +116,22 @@ def plotOfTerraSeqVsParOnMacRays():
     yLabel = "Speedup"
     title = "Speedup vs. Number of Threads with Varying Light Source Counts on Large Image"
 
-    plotIt(oneSourceSpeedup, "orange", title, xLabel, yLabel, "1 Source")
-    plotIt(fiveSourcesSpeedup, "purple", title, xLabel, yLabel, "5 Sources")
-    plotIt(tenSourcesSpeedup, "limegreen", title, xLabel, yLabel, "10 Sources")
+    plotIt(oneSourceSpeedup, "orange", title, xLabel, yLabel, "1 Source Mac", ".")
+    plotIt(fiveSourcesSpeedup, "purple", title, xLabel, yLabel, "5 Sources Mac", ".")
+    plotIt(tenSourcesSpeedup, "limegreen", title, xLabel, yLabel, "10 Sources Mac", ".")
+
+    plotIt(oneSourceSpeedupGHC, "orange", title, xLabel, yLabel, "1 Source GHC", "*")
+    plotIt(fiveSourcesSpeedupGHC, "purple", title, xLabel, yLabel, "5 Sources GHC", "*")
+    plotIt(tenSourcesSpeedupGHC, "limegreen", title, xLabel, yLabel, "10 Sources GHC", "*")
 
     plt.rcParams.update({'text.color': "black",
                      'axes.labelcolor': "black"})
+    plt.legend(title="Scene")
+    plt.show()
+
+    plotIt(oneSourceSpeedupPSC, "orange", title, xLabel, yLabel, "1 Source PSC", "p")
+    plotIt(fiveSourcesSpeedupPSC, "purple", title, xLabel, yLabel, "5 Sources PSC", "p")
+    plotIt(tenSourcesSpeedupPSC, "limegreen", title, xLabel, yLabel, "10 Sources PSC", "p")
     plt.legend(title="Scene")
     plt.show()
 
@@ -137,6 +150,61 @@ def plotOfTerraSeqVsCudaRays():
         [512, 104.97753805944215],
         [1024, 107.3367227736005]
     ])
+
+    plt.rcParams["figure.figsize"] = [9.50, 5.50]
+    plt.rcParams["figure.autolayout"] = True
+
+    xLabel = "Number of Light Sources"
+    yLabel = "Speedup"
+    title = "Speedup vs. Number of Light Sources on Large Image"
+
+    plotIt(sourcesPointsGHC, "green", title, xLabel, yLabel, "Cuda GHC", "h")
+
+
+    plt.legend(title="Platform")
+    plt.show()
+
+def plotOfPartialScoresSegmentPercentage():
+    partialCudaScoresPropGHC = np.array([
+        [1, 17.2796],
+        [2, 33.826613],
+        [4, 43.224870],
+        [8, 61.243042],
+        [16, 72.885531],
+        [32, 83.025245],
+        [64, 86.366887],
+        [128, 90.623111],
+        [256, 92.973094],
+        [512, 94.184642],
+        [1024, 94.717059]
+    ])
+
+    partialOpenMPScoresPropGHC = np.array([
+        [1, 89.921623],
+        [2, 91.306148],
+        [4, 92.251786],
+        [8, 94.617732],
+        [16, 96.066076],
+        [32, 97.279369],
+        [64, 97.746962],
+        [128, 97.709903],
+        [256, 97.878596],
+        [512, 97.757605],
+        [1024, 97.918235]
+    ])
+
+    plt.rcParams["figure.figsize"] = [9.50, 5.50]
+    plt.rcParams["figure.autolayout"] = True
+
+    xLabel = "Number of Light Sources"
+    yLabel = "Percentage of Algorithm Computing Partial Scores"
+    title = "Percentage of Algorithm Scoring vs. Number of Light Sources"
+
+    plotIt(partialCudaScoresPropGHC, "turquoise", title, xLabel, yLabel, "Cuda GHC", "h")
+    plotIt(partialCudaScoresPropGHC, "gold", title, xLabel, yLabel, "Cuda GHC", "s")
+
+    plt.legend(title="Platform")
+    plt.show()
 
 def plotOfTerraSeqVsParConvolution():
     macSpeeds = np.array([
@@ -157,7 +225,9 @@ def plotOfTerraSeqVsParConvolution():
 
     PSCspeeds = None
 
-plotOfTerraSeqVsParOnMacRays()
-# graphIt(slt, "yellow", graphTitle, xLabel, yLabel, "sparse-200000")
+#plotOfTerraSeqVsParOnMacRays()
+#plotOfTerraSeqVsCudaRays()
+
+plotOfPartialScoresSegmentPercentage()
 
 

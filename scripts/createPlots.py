@@ -161,7 +161,49 @@ def plotOfTerraSeqVsCudaRays():
     plotIt(sourcesPointsGHC, "green", title, xLabel, yLabel, "Cuda GHC", "h")
 
 
-    plt.legend(title="Scene")
+    plt.legend(title="Platform")
+    plt.show()
+
+def plotOfPartialScoresSegmentPercentage():
+    partialCudaScoresPropGHC = np.array([
+        [1, 17.2796],
+        [2, 33.826613],
+        [4, 43.224870],
+        [8, 61.243042],
+        [16, 72.885531],
+        [32, 83.025245],
+        [64, 86.366887],
+        [128, 90.623111],
+        [256, 92.973094],
+        [512, 94.184642],
+        [1024, 94.717059]
+    ])
+
+    partialOpenMPScoresPropGHC = np.array([
+        [1, 89.921623],
+        [2, 91.306148],
+        [4, 92.251786],
+        [8, 94.617732],
+        [16, 96.066076],
+        [32, 97.279369],
+        [64, 97.746962],
+        [128, 97.709903],
+        [256, 97.878596],
+        [512, 97.757605],
+        [1024, 97.918235]
+    ])
+
+    plt.rcParams["figure.figsize"] = [9.50, 5.50]
+    plt.rcParams["figure.autolayout"] = True
+
+    xLabel = "Number of Light Sources"
+    yLabel = "Percentage of Algorithm Computing Partial Scores"
+    title = "Percentage of Algorithm Scoring vs. Number of Light Sources"
+
+    plotIt(partialCudaScoresPropGHC, "turquoise", title, xLabel, yLabel, "Cuda GHC", "h")
+    plotIt(partialCudaScoresPropGHC, "gold", title, xLabel, yLabel, "Cuda GHC", "s")
+
+    plt.legend(title="Platform")
     plt.show()
 
 def plotOfTerraSeqVsParConvolution():
@@ -183,8 +225,9 @@ def plotOfTerraSeqVsParConvolution():
 
     PSCspeeds = None
 
-plotOfTerraSeqVsParOnMacRays()
-plotOfTerraSeqVsCudaRays()
-# graphIt(slt, "yellow", graphTitle, xLabel, yLabel, "sparse-200000")
+#plotOfTerraSeqVsParOnMacRays()
+#plotOfTerraSeqVsCudaRays()
+
+plotOfPartialScoresSegmentPercentage()
 
 

@@ -33,6 +33,7 @@ namespace ispc { /* namespace */
 extern "C" {
 #endif // __cplusplus
     extern void convolution_ispc(int32_t rows, int32_t cols, int32_t * input, int32_t * output);
+    extern void convolution_ispc_task(int32_t rowstart, int32_t rowend, int32_t cols, int32_t * input, int32_t * output);
 #if defined(__cplusplus) && (! defined(__ISPC_NO_EXTERN_C) || !__ISPC_NO_EXTERN_C )
 } /* end extern C */
 #endif // __cplusplus

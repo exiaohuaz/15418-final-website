@@ -32,8 +32,8 @@ compare: imageCompare.cpp
 	x86_64-apple-darwin21-g++-12 $(CPPFLAGS) imageCompare.cpp -o imageCompare
 
 run: raytrace-sequential raytrace-parallel imageCompare
-	./raytrace-sequential $(IMAGEDIR)/$(IMAGE) $(IMAGEDIR)/outputConv.png lights.txt $(IMAGEDIR)/outputSeq.png
-	./raytrace-parallel $(IMAGEDIR)/$(IMAGE) $(IMAGEDIR)/outputConv.png lights.txt $(IMAGEDIR)/outputPar.png
+	./raytrace-sequential $(IMAGEDIR)/$(IMAGE) $(IMAGEDIR)/convolution_output.png lights.txt $(IMAGEDIR)/outputSeq.png
+	./raytrace-parallel $(IMAGEDIR)/$(IMAGE) $(IMAGEDIR)/convolution_output.png lights.txt $(IMAGEDIR)/outputPar.png
 	./imageCompare $(IMAGEDIR)/outputSeq.png $(IMAGEDIR)/outputPar.png
 
 lights:

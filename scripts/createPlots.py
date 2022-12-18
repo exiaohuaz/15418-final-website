@@ -260,6 +260,22 @@ def plotOfISPCTaskSpeedup():
         [16, 4.900920]
     ])
 
+    localSpeeds_nocopy = np.array([
+        [1, 5.797375],
+        [2, 11.523137],
+        [4, 21.464800],
+        [8, 22.958131],
+        [16, 24.554258]
+    ])
+
+    localSpeeds_withcopy = np.array([
+        [1, 2.855783],
+        [2, 3.730772],
+        [4, 4.399333],
+        [8, 4.583366],
+        [16, 4.484858]
+    ])
+
     plt.rcParams["figure.figsize"] = [9.50, 5.50]
     plt.rcParams["figure.autolayout"] = True
 
@@ -268,9 +284,26 @@ def plotOfISPCTaskSpeedup():
     title = "Speedup of Convolution with ISPC and OpenMP Threads"
 
     plotIt(GHCspeeds_nocopy, "turquoise", title, xLabel, yLabel, "Exclude Copy Overhead GHC", "h")
-    plotIt(GHCspeeds, "turquoise", title, xLabel, yLabel, "Include Copy Overhead GHC", "s")
+    plotIt(GHCspeeds, "pink", title, xLabel, yLabel, "Include Copy Overhead GHC", "s")
+    plotIt(localSpeeds_nocopy, "orange", title, xLabel, yLabel, "Exclude Copy Overhead Mac", "h")
+    plotIt(localSpeeds_withcopy, "gray", title, xLabel, yLabel, "Include Copy Overhead Mac", "s")
 
-    plt.legend(title="Platform")
+
+    plt.legend(title="Modality")
+    plt.show()
+
+def plotOfISPCTaskSpeedupLocal():
+    
+
+    plt.rcParams["figure.figsize"] = [9.50, 5.50]
+    plt.rcParams["figure.autolayout"] = True
+
+    xLabel = "Number of Tasks"
+    yLabel = "Speedup (relative to sequential)"
+    title = "Speedup of Convolution on Mac with ISPC and OpenMP Threads"
+
+    
+    plt.legend(title="Modality")
     plt.show()
 
 plotOfISPCTaskSpeedup()

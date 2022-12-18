@@ -1,7 +1,7 @@
 CXX86=x86_64-apple-darwin21-g++-12
 CXXISPC=ispc --arch=x86_64 --colored-output
 CXX=g++
-IMAGE=UpMovie.png
+IMAGE=terra.png
 CXXFLAGS=-I/usr/local/Cellar/libpng/1.6.39/include -I/usr/local/Cellar/png++/0.2.10/include -L/usr/local/Cellar/libpng/1.6.39/lib -lpng16
 BRIDGESFLAGS=-I/jet/home/rkhandel/include
 NUMTHREADS=1 # set argument from cmdline for testing

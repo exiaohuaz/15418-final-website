@@ -29,3 +29,4 @@ clean:
 	rm -rf convolution
 	rm -rf convolution_ispc.o
 	rm -rf ../images/outputConv.png
+	rm -rf ../images/convolution_output.png
